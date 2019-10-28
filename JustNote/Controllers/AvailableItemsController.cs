@@ -16,6 +16,7 @@ namespace JustNote.Controllers
         private string hashKey;
         private FolderService folderData = new FolderService();
         private NoteService note = new NoteService();
+        private AccessService access = new AccessService();
         
         [HttpGet]
         public IActionResult GetItems(string token)
@@ -33,22 +34,37 @@ namespace JustNote.Controllers
             }
             return Unauthorized();
         }
+
         [HttpPost("Folder/{id}")]
-        public IActionResult GetFolderAccess(string token)
+        public IActionResult GetFolderAccess(string id, string token, [FromBody]Object inputValue)
         {
-            return null;
+            if (new TokenManagerService().ValidateToken(token, out userName, out hashKey))
+            {
+                string userEmail = JObject.Parse(inputValue.ToString()).Value<String>("UserEmail");
+                string role = JObject.Parse(inputValue.ToString()).Value<String>("Role");
+                string userId = new UserService().GetUserByEmail(userEmail).GetAwaiter().GetResult().Id;
+
+                access.CreateNewFolderAccess(userId, id, role).GetAwaiter().GetResult();
+                return Ok();
+            }
+
+            return Unauthorized();
         }
+
         [HttpPost("Note/{id}")]
         public IActionResult GetNoteAccess(string id, string token, [FromBody]Object inputValue)
         {
             if (new TokenManagerService().ValidateToken(token, out userName, out hashKey))
             {
                 string userEmail = JObject.Parse(inputValue.ToString()).Value<String>("UserEmail");
-
-
+                string role = JObject.Parse(inputValue.ToString()).Value<String>("Role");
+                string userId = new UserService().GetUserByEmail(userEmail).GetAwaiter().GetResult().Id;
+                
+                access.CreateNewNoteAccess(userId, id, role).GetAwaiter().GetResult();
+                return Ok();
             }
 
-            return null;
+            return Unauthorized();
         }
     }
 }

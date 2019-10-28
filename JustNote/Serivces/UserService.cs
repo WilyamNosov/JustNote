@@ -70,6 +70,16 @@ namespace JustNote.Serivces
 
             return null;
         }
+        public async Task<User> GetUserByEmail(string userEmail)
+        {
+            FilterDefinition<User> filterByEmail = Builders<User>.Filter.Eq("Email", userEmail);
+
+            if (await Users.Find(filterByEmail).FirstOrDefaultAsync() != null)
+                return await Users.Find(filterByEmail).FirstOrDefaultAsync();
+
+            return null;
+        }
+
         private bool CheckUserInDB(User newUser)
         {
             IEnumerable<User> users = GetAllUsers().GetAwaiter().GetResult();

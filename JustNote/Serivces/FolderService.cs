@@ -19,6 +19,10 @@ namespace JustNote.Serivces
         {
             get { return base.Database.GetCollection<Folder>("folder"); }
         }
+        private IMongoCollection<AvailableFolder> AvailableFolders
+        {
+            get { return base.Database.GetCollection<AvailableFolder>("availablefolder"); }
+        }
         public async Task CreateFolder(Folder folder)
         {
             await Folders.InsertOneAsync(folder);
@@ -62,6 +66,22 @@ namespace JustNote.Serivces
             }
 
             return await Folders.Find(filter).ToListAsync();
+        }
+        public async Task<IEnumerable<Folder>> GetAvailableFolders(string userId)
+        {
+            FilterDefinitionBuilder<AvailableFolder> builder = new FilterDefinitionBuilder<AvailableFolder>();
+            FilterDefinition<AvailableFolder> filter = builder.Empty;
+            List<Folder> result = new List<Folder>();
+
+            if (!string.IsNullOrWhiteSpace(userId))
+                filter = filter & builder.Eq("UserId", new ObjectId(userId));
+
+            List<AvailableFolder> AvailableFolderIds = await AvailableFolders.Find(filter).ToListAsync();
+
+            foreach (AvailableFolder AvailableFolderId in AvailableFolderIds)
+                result.Add(GetFolder(AvailableFolderId.FolderId).GetAwaiter().GetResult());
+
+            return result;
         }
         public async Task UpdateFolder(string id, string userId, Folder folder)
         {

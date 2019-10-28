@@ -15,7 +15,7 @@ namespace JustNote.Controllers
     public class LoginController : Controller
     {
         [HttpPost]
-        public string LoginUser(Login loginObject)
+        public IActionResult LoginUser(Login loginObject)
         {
             string userName = loginObject.UserName;
             string password = loginObject.UserPassword;
@@ -23,9 +23,9 @@ namespace JustNote.Controllers
             
             User user = new UserService().GetUser(userName, new HashKeyService().GetHashKey(password)).GetAwaiter().GetResult();
             if (user != null)
-                return new TokenManagerService().GenerateToken(userName, user.HashKey);
+                return Ok(new TokenManagerService().GenerateToken(userName, user.HashKey));
              
-            return null;
+            return Unauthorized();
         }
     }
 }

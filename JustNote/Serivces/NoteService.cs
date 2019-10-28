@@ -19,6 +19,10 @@ namespace JustNote.Serivces
         {
             get { return base.Database.GetCollection<Note>("note"); }
         }
+        private IMongoCollection<AvailableNote> AvailableNotes
+        {
+            get { return base.Database.GetCollection<AvailableNote>("availablenote"); }
+        }
 
         public async Task CreateNote(Note note)
         {
@@ -52,7 +56,7 @@ namespace JustNote.Serivces
 
             return await Notes.Find(filter).ToListAsync();
         }
-        public async Task<IEnumerable<Note>> GetFolderBySearchString(string searchString)
+        public async Task<IEnumerable<Note>> GetNoteBySearchString(string searchString)
         {
             FilterDefinitionBuilder<Note> builder = new FilterDefinitionBuilder<Note>();
             FilterDefinition<Note> filter = builder.Empty;
@@ -63,6 +67,22 @@ namespace JustNote.Serivces
             }
 
             return await Notes.Find(filter).ToListAsync();
+        }
+        public async Task<IEnumerable<Note>> GetAvailableNotes(string userId)
+        {
+            FilterDefinitionBuilder<AvailableNote> builder = new FilterDefinitionBuilder<AvailableNote>();
+            FilterDefinition<AvailableNote> filter = builder.Empty;
+            List<Note> result = new List<Note>();
+
+            if (!string.IsNullOrWhiteSpace(userId))
+                filter = filter & builder.Eq("UserId", new ObjectId(userId));
+
+            List<AvailableNote> AvailableNoteIds = await AvailableNotes.Find(filter).ToListAsync();
+
+            foreach (AvailableNote AvailableNoteId in AvailableNoteIds)
+                result.Add(GetNote(AvailableNoteId.NoteId).GetAwaiter().GetResult());
+
+            return result;
         }
         public async Task UpdateNote(string noteId, string userId, Note note)
         {

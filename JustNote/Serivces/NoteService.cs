@@ -73,14 +73,24 @@ namespace JustNote.Serivces
             FilterDefinitionBuilder<AvailableNote> builder = new FilterDefinitionBuilder<AvailableNote>();
             FilterDefinition<AvailableNote> filter = builder.Empty;
             List<Note> result = new List<Note>();
+            List<string> folderIds = new List<string>();
 
             if (!string.IsNullOrWhiteSpace(userId))
                 filter = filter & builder.Eq("UserId", new ObjectId(userId));
 
             List<AvailableNote> AvailableNoteIds = await AvailableNotes.Find(filter).ToListAsync();
 
-            foreach (AvailableNote AvailableNoteId in AvailableNoteIds)
-                result.Add(GetNote(AvailableNoteId.NoteId).GetAwaiter().GetResult());
+            foreach (AvailableNote availableNote in AvailableNoteIds)
+                folderIds.Add(GetNote(availableNote.NoteId).GetAwaiter().GetResult().FolderId);
+
+
+            foreach (AvailableNote availableNote in AvailableNoteIds)
+            {
+                Folder folder = new FolderService().GetFolder(GetNote(availableNote.NoteId).GetAwaiter().GetResult().FolderId).GetAwaiter().GetResult();
+
+                if (folder == null || !folderIds.Contains(folder.ParentFolderId))
+                    result.Add(GetNote(availableNote.NoteId).GetAwaiter().GetResult());
+            }
 
             return result;
         }

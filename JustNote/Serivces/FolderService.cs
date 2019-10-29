@@ -29,7 +29,10 @@ namespace JustNote.Serivces
         }
         public async Task<Folder> GetFolder(string id)
         {
-            return await Folders.Find(new BsonDocument("_id", new ObjectId(id))).FirstOrDefaultAsync();
+            if (!String.IsNullOrWhiteSpace(id))
+                return await Folders.Find(new BsonDocument("_id", new ObjectId(id))).FirstOrDefaultAsync();
+
+            return null;
         }
         public async Task<IEnumerable<Folder>> GetAllUserFolders(string userId)
         {
@@ -72,14 +75,24 @@ namespace JustNote.Serivces
             FilterDefinitionBuilder<AvailableFolder> builder = new FilterDefinitionBuilder<AvailableFolder>();
             FilterDefinition<AvailableFolder> filter = builder.Empty;
             List<Folder> result = new List<Folder>();
+            List<string> folderIds = new List<string>();
 
             if (!string.IsNullOrWhiteSpace(userId))
                 filter = filter & builder.Eq("UserId", new ObjectId(userId));
 
             List<AvailableFolder> AvailableFolderIds = await AvailableFolders.Find(filter).ToListAsync();
+            
+            foreach(AvailableFolder AvailableFolderId in AvailableFolderIds)
+                folderIds.Add(AvailableFolderId.FolderId);
+            
 
             foreach (AvailableFolder AvailableFolderId in AvailableFolderIds)
-                result.Add(GetFolder(AvailableFolderId.FolderId).GetAwaiter().GetResult());
+            {
+                Folder folder = GetFolder(AvailableFolderId.FolderId).GetAwaiter().GetResult();
+                
+                if (!folderIds.Contains(folder.ParentFolderId))
+                    result.Add(folder);
+            }
 
             return result;
         }

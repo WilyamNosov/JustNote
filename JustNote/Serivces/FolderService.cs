@@ -2,6 +2,7 @@
 using JustNote.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -70,11 +71,11 @@ namespace JustNote.Serivces
 
             return await Folders.Find(filter).ToListAsync();
         }
-        public async Task<IEnumerable<Folder>> GetAvailableFolders(string userId)
+        public async Task<IEnumerable<Object>> GetAvailableFolders(string userId)
         {
             FilterDefinitionBuilder<AvailableFolder> builder = new FilterDefinitionBuilder<AvailableFolder>();
             FilterDefinition<AvailableFolder> filter = builder.Empty;
-            List<Folder> result = new List<Folder>();
+            List<Object> result = new List<Object>();
             List<string> folderIds = new List<string>();
 
             if (!string.IsNullOrWhiteSpace(userId))
@@ -85,13 +86,16 @@ namespace JustNote.Serivces
             foreach(AvailableFolder AvailableFolderId in AvailableFolderIds)
                 folderIds.Add(AvailableFolderId.FolderId);
             
-
             foreach (AvailableFolder AvailableFolderId in AvailableFolderIds)
             {
                 Folder folder = GetFolder(AvailableFolderId.FolderId).GetAwaiter().GetResult();
                 
                 if (!folderIds.Contains(folder.ParentFolderId))
-                    result.Add(folder);
+                {
+                    JObject addToResult = JObject.FromObject(folder);
+                    addToResult.Add("Role", AvailableFolderId.Role);
+                    result.Add(addToResult);
+                }
             }
 
             return result;

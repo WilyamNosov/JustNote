@@ -63,7 +63,8 @@ namespace JustNote.Serivces
 
             foreach (Note note in notesInFolder)
             {
-                CreateNewNoteAccess(userId, note.Id, role).GetAwaiter().GetResult();
+                if(GetAvailableNote(note.Id, userId) == null)
+                    CreateNewNoteAccess(userId, note.Id, role).GetAwaiter().GetResult();
             }
 
             foreach(Folder folder in childFolders)
@@ -78,7 +79,8 @@ namespace JustNote.Serivces
                 Role = role
             };
 
-            await AccessFolders.InsertOneAsync(availableFolder);
+            if (GetAvailableFolder(folderId, userId) == null)
+                await AccessFolders.InsertOneAsync(availableFolder);
         }
         public async Task CreateNewNoteAccess(string userId, string noteId, string role)
         {
@@ -88,7 +90,9 @@ namespace JustNote.Serivces
                 NoteId = noteId,
                 Role = role
             };
-            await AccessNotes.InsertOneAsync(availableNote);
+
+            if (GetAvailableNote(noteId, userId) == null)
+                await AccessNotes.InsertOneAsync(availableNote);
         }
 
         public async Task<IEnumerable<Object>> GetAvailableItems(string userId)

@@ -69,36 +69,6 @@ namespace JustNote.Serivces
 
             return await Notes.Find(filter).ToListAsync();
         }
-        public async Task<IEnumerable<Object>> GetAvailableNotes(string userId)
-        {
-            FilterDefinitionBuilder<AvailableNote> builder = new FilterDefinitionBuilder<AvailableNote>();
-            FilterDefinition<AvailableNote> filter = builder.Empty;
-            List<Object> result = new List<Object>();
-            List<string> folderIds = new List<string>();
-
-            if (!string.IsNullOrWhiteSpace(userId))
-                filter = filter & builder.Eq("UserId", new ObjectId(userId));
-
-            List<AvailableNote> AvailableNoteIds = await AvailableNotes.Find(filter).ToListAsync();
-
-            foreach (AvailableNote availableNote in AvailableNoteIds)
-                folderIds.Add(GetNote(availableNote.NoteId).GetAwaiter().GetResult().FolderId);
-
-
-            foreach (AvailableNote availableNote in AvailableNoteIds)
-            {
-                Folder folder = new FolderService().GetFolder(GetNote(availableNote.NoteId).GetAwaiter().GetResult().FolderId).GetAwaiter().GetResult();
-
-                if (folder == null || !folderIds.Contains(folder.ParentFolderId))
-                {
-                    JObject addToResult = JObject.FromObject(GetNote(availableNote.NoteId).GetAwaiter().GetResult());
-                    addToResult.Add("Role", availableNote.Role);
-                    result.Add(addToResult);
-                }
-            }
-
-            return result;
-        }
         public async Task UpdateNote(string noteId, string userId, Note note)
         {
             note.Id = noteId;

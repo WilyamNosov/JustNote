@@ -20,10 +20,6 @@ namespace JustNote.Serivces
         {
             get { return base.Database.GetCollection<Folder>("folder"); }
         }
-        private IMongoCollection<AvailableFolder> AvailableFolders
-        {
-            get { return base.Database.GetCollection<AvailableFolder>("availablefolder"); }
-        }
         public async Task CreateFolder(Folder folder)
         {
             await Folders.InsertOneAsync(folder);
@@ -70,35 +66,6 @@ namespace JustNote.Serivces
             }
 
             return await Folders.Find(filter).ToListAsync();
-        }
-        public async Task<IEnumerable<Object>> GetAvailableFolders(string userId)
-        {
-            FilterDefinitionBuilder<AvailableFolder> builder = new FilterDefinitionBuilder<AvailableFolder>();
-            FilterDefinition<AvailableFolder> filter = builder.Empty;
-            List<Object> result = new List<Object>();
-            List<string> folderIds = new List<string>();
-
-            if (!string.IsNullOrWhiteSpace(userId))
-                filter = filter & builder.Eq("UserId", new ObjectId(userId));
-
-            List<AvailableFolder> AvailableFolderIds = await AvailableFolders.Find(filter).ToListAsync();
-            
-            foreach(AvailableFolder AvailableFolderId in AvailableFolderIds)
-                folderIds.Add(AvailableFolderId.FolderId);
-            
-            foreach (AvailableFolder AvailableFolderId in AvailableFolderIds)
-            {
-                Folder folder = GetFolder(AvailableFolderId.FolderId).GetAwaiter().GetResult();
-                
-                if (!folderIds.Contains(folder.ParentFolderId))
-                {
-                    JObject addToResult = JObject.FromObject(folder);
-                    addToResult.Add("Role", AvailableFolderId.Role);
-                    result.Add(addToResult);
-                }
-            }
-
-            return result;
         }
         public async Task UpdateFolder(string id, string userId, Folder folder)
         {

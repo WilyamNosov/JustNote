@@ -25,10 +25,20 @@ namespace JustNote.Controllers
             {
                 User user = new UserService().GetUser(userName, hashKey).GetAwaiter().GetResult();
 
-                IEnumerable<Object> folders = folderData.GetAvailableFolders(user.Id).GetAwaiter().GetResult();
-                IEnumerable<Object> notes = note.GetAvailableNotes(user.Id).GetAwaiter().GetResult();
+                IEnumerable<Object> result = access.GetAvailableItems(user.Id).GetAwaiter().GetResult();
 
-                IEnumerable<Object> result = folders.Concat(notes);
+                return Ok(result);
+            }
+            return Unauthorized();
+        }
+        [HttpGet("{id}")]
+        public IActionResult GetItemsFromFolder(string id, string token)
+        {
+            if (new TokenManagerService().ValidateToken(token, out userName, out hashKey))
+            {
+                User user = new UserService().GetUser(userName, hashKey).GetAwaiter().GetResult();
+
+                IEnumerable<Object> result = access.GetAvailableItemsFromFolder(id, user.Id).GetAwaiter().GetResult();
 
                 return Ok(result);
             }

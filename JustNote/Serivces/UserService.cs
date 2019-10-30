@@ -15,12 +15,6 @@ namespace JustNote.Serivces
         {
 
         }
-
-        private IMongoCollection<User> Users
-        {
-            get { return base.Database.GetCollection<User>("user"); }
-        }
-
         public async Task<bool> CreateUser(Registration newUser, string hashKey)
         {
             User generateUser = new User()

@@ -16,15 +16,17 @@ namespace JustNote.Serivces
         {
 
         }
-        private IMongoCollection<Folder> Folders
-        {
-            get { return base.Database.GetCollection<Folder>("folder"); }
-        }
         public async Task CreateFolder(Folder folder)
         {
-
-
             await Folders.InsertOneAsync(folder);
+
+            AccessService accessService = new AccessService();
+            IEnumerable<AvailableFolder> accessFolders = accessService.GetAvailableFoldersByFolderId(folder.ParentFolderId).GetAwaiter().GetResult();
+            
+            foreach (AvailableFolder accessFolder in accessFolders)
+            {
+                accessService.CreateNewFolderAccess(accessFolder.UserId, folder.Id, accessFolder.Role).GetAwaiter().GetResult();
+            }
         }
         public async Task<Folder> GetFolder(string id)
         {

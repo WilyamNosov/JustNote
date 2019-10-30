@@ -16,18 +16,17 @@ namespace JustNote.Serivces
         {
 
         }
-        private IMongoCollection<Note> Notes
-        {
-            get { return base.Database.GetCollection<Note>("note"); }
-        }
-        private IMongoCollection<AvailableNote> AvailableNotes
-        {
-            get { return base.Database.GetCollection<AvailableNote>("availablenote"); }
-        }
-
         public async Task CreateNote(Note note)
         {
-            await Notes.InsertOneAsync(note);
+            await Notes.InsertOneAsync(note); 
+            
+            AccessService accessService = new AccessService();
+            IEnumerable<AvailableFolder> accessFolders = accessService.GetAvailableFoldersByFolderId(note.FolderId).GetAwaiter().GetResult();
+
+            foreach (AvailableFolder accessFolder in accessFolders)
+            {
+                accessService.CreateNewNoteAccess(accessFolder.UserId, note.Id, accessFolder.Role).GetAwaiter().GetResult();
+            }
         }
         public async Task<Note> GetNote(string id)
         {

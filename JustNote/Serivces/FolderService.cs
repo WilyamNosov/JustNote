@@ -22,6 +22,8 @@ namespace JustNote.Serivces
         }
         public async Task CreateFolder(Folder folder)
         {
+
+
             await Folders.InsertOneAsync(folder);
         }
         public async Task<Folder> GetFolder(string id)

@@ -19,15 +19,7 @@ namespace JustNote.Serivces
         {
 
         }
-        public IMongoCollection<AvailableFolder> AccessFolders
-        {
-            get { return base.Database.GetCollection<AvailableFolder>("availablefolder"); }
-        }
-        public IMongoCollection<AvailableNote> AccessNotes
-        {
-            get { return base.Database.GetCollection<AvailableNote>("availablenote"); }
-        }
-        public async Task<IEnumerable<AvailableFolder>> GetAvailableFolders(string folderId)
+        public async Task<IEnumerable<AvailableFolder>> GetAvailableFoldersByFolderId(string folderId)
         {
             FilterDefinitionBuilder<AvailableFolder> builder = new FilterDefinitionBuilder<AvailableFolder>();
             FilterDefinition<AvailableFolder> filter = builder.Empty;
@@ -37,7 +29,6 @@ namespace JustNote.Serivces
 
             return await AccessFolders.Find(filter).ToListAsync();
         }
-
         public async Task<AvailableFolder> GetAvailableFolder(string folderId, string userId)
         {
             FilterDefinition<AvailableFolder> filter = Builders<AvailableFolder>.Filter.And(

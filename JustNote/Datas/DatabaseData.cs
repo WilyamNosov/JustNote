@@ -1,4 +1,5 @@
-﻿using MongoDB.Driver;
+﻿using JustNote.Models;
+using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +26,30 @@ namespace JustNote.Datas
             {
                 return database;
             }
+        }
+        public IMongoCollection<User> Users
+        {
+            get { return Database.GetCollection<User>("user"); }
+        }
+        public IMongoCollection<Folder> Folders
+        {
+            get { return Database.GetCollection<Folder>("folder"); }
+        }
+        public IMongoCollection<Note> Notes
+        {
+            get { return Database.GetCollection<Note>("note"); }
+        }
+        public IMongoCollection<AvailableNote> AvailableNotes
+        {
+            get { return Database.GetCollection<AvailableNote>("availablenote"); }
+        }
+        public IMongoCollection<AvailableFolder> AccessFolders
+        {
+            get { return Database.GetCollection<AvailableFolder>("availablefolder"); }
+        }
+        public IMongoCollection<AvailableNote> AccessNotes
+        {
+            get { return Database.GetCollection<AvailableNote>("availablenote"); }
         }
     }
 }

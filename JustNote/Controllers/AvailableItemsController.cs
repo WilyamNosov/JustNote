@@ -44,7 +44,23 @@ namespace JustNote.Controllers
             }
             return Unauthorized();
         }
+        [HttpPost("Create/Folder/{id}")]
+        public IActionResult CreateNewNote(string id, string token, [FromBody]Folder folder)
+        {
+            if (new TokenManagerService().ValidateToken(token, out userName, out hashKey))
+            {
+                User user = new UserService().GetUser(userName, hashKey).GetAwaiter().GetResult();
 
+                folder.FolderDate = DateTime.Now;
+                folder.UserId = new FolderService().GetFolder(id).GetAwaiter().GetResult().UserId;
+                folder.ParentFolderId = id;
+
+                new FolderService().CreateFolder(folder).GetAwaiter().GetResult();
+                return Ok();
+            }
+
+            return Unauthorized();
+        }
         [HttpPost("Folder/{id}")]
         public IActionResult GetFolderAccess(string id, string token, [FromBody]Object inputValue)
         {
@@ -60,7 +76,23 @@ namespace JustNote.Controllers
 
             return Unauthorized();
         }
+        [HttpPost("Create/Note/{id}")]
+        public IActionResult CreateNewNote(string id, string token, [FromBody]Note note)
+        {
+            if (new TokenManagerService().ValidateToken(token, out userName, out hashKey))
+            {
+                User user = new UserService().GetUser(userName, hashKey).GetAwaiter().GetResult();
 
+                note.NoteDate = DateTime.Now;
+                note.UserId = new FolderService().GetFolder(id).GetAwaiter().GetResult().UserId;
+                note.FolderId = id;
+
+                new NoteService().CreateNote(note).GetAwaiter().GetResult();
+                return Ok();
+            }
+
+            return Unauthorized();
+        }
         [HttpPost("Note/{id}")]
         public IActionResult GetNoteAccess(string id, string token, [FromBody]Object inputValue)
         {

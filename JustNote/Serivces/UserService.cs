@@ -24,7 +24,8 @@ namespace JustNote.Serivces
                 FirstName = newUser.FirstName,
                 LastName = newUser.LastName,
                 Email = newUser.Email,
-                PhoneNumber = newUser.PhoneNumber
+                PhoneNumber = newUser.PhoneNumber,
+                ConfirmedEmail = false
             };
             if (CheckUserInDB(generateUser))
             {
@@ -86,6 +87,11 @@ namespace JustNote.Serivces
             
             return true;
         }
+        public async Task UpdateUser(User user)
+        {
+            await Users.ReplaceOneAsync(new BsonDocument("_id", new ObjectId(user.Id)), user);
+        }
+
         private async Task<IEnumerable<User>> GetAllUsers() => await Users.Find(new BsonDocument()).ToListAsync();
     }
 }

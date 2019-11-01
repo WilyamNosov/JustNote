@@ -66,25 +66,6 @@ namespace JustNote.Serivces
                 return false;
             }
         }
-        ///*protected */public Task<IPrincipal> AuthenticateJwtToken(string token)
-        //{
-        //    string username;
-
-        //    if (ValidateToken(token, out username))
-        //    {
-        //        List<Claim> claims = new List<Claim>
-        //        {
-        //            new Claim(ClaimTypes.Name, username)
-        //        };
-
-        //        ClaimsIdentity identity = new ClaimsIdentity(claims, "Jwt");
-        //        IPrincipal user = new ClaimsPrincipal(identity);
-
-        //        return Task.FromResult(user);
-        //    }
-
-        //    return Task.FromResult<IPrincipal>(null);
-        //}
         public static ClaimsPrincipal GetPrincipal(string token)
         {
             try
@@ -113,6 +94,54 @@ namespace JustNote.Serivces
             catch (Exception)
             {
                 return null;
+            }
+        }
+
+        public string GenerateConfirmEmailToken(string userEmail)
+        {
+            byte[] key = Convert.FromBase64String(Secret);
+            SymmetricSecurityKey securityKey = new SymmetricSecurityKey(key);
+            SecurityTokenDescriptor descriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[] {
+                    new Claim (ClaimTypes.Email, userEmail)
+                }),
+                Expires = DateTime.UtcNow.AddDays(1),
+                SigningCredentials = new SigningCredentials(securityKey,
+                SecurityAlgorithms.HmacSha256Signature)
+            };
+            JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
+            JwtSecurityToken token = handler.CreateJwtSecurityToken(descriptor);
+            return handler.WriteToken(token);
+        }
+        public bool ValidateConfirmEmailToken(string token, out string email)
+        {
+            email = null;
+            
+            ClaimsPrincipal simplePrinciple = GetPrincipal(token);
+
+            try
+            {
+                ClaimsIdentity identity = simplePrinciple.Identity as ClaimsIdentity;
+
+                if (identity == null)
+                    return false;
+
+                if (!identity.IsAuthenticated)
+                    return false;
+
+                Claim emailClaim = identity.FindFirst(ClaimTypes.Email);
+                
+                email = emailClaim?.Value;
+                
+                if (string.IsNullOrEmpty(email))
+                    return false;
+
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
     }

@@ -61,7 +61,8 @@ namespace JustNote.Controllers
             if (new TokenManagerService().ValidateToken(token, out userName, out hashKey))
             {
                 User user = new UserService().GetUser(userName, hashKey).GetAwaiter().GetResult();
-                noteData.UpdateNote(id, user.Id, note).GetAwaiter().GetResult();
+                
+                noteData.UpdateNote(id, note).GetAwaiter().GetResult();
 
                 return Ok();
             }

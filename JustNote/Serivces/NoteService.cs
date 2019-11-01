@@ -68,12 +68,13 @@ namespace JustNote.Serivces
 
             return await Notes.Find(filter).ToListAsync();
         }
-        public async Task UpdateNote(string noteId, string userId, Note note)
+        public async Task UpdateNote(string noteId, Note note)
         {
+            Note oldNote = GetNote(noteId).GetAwaiter().GetResult();
             note.Id = noteId;
-            note.UserId = userId;
+            note.UserId = oldNote.UserId;
             note.NoteDate = DateTime.Now;
-            note.FolderId = GetNote(noteId).GetAwaiter().GetResult().FolderId;
+            note.FolderId = oldNote.FolderId;
 
             await Notes.ReplaceOneAsync(new BsonDocument("_id", new ObjectId(noteId)), note);
         }

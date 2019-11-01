@@ -40,7 +40,10 @@ namespace JustNote.Controllers
 
                 IEnumerable<Object> result = access.GetAvailableItemsFromFolder(id, user.Id).GetAwaiter().GetResult();
 
-                return Ok(result);
+                Folder parentFolder = folderData.GetFolder(id).GetAwaiter().GetResult();
+                IEnumerable<Object> x = new List<Object>() { new TimedModel() { PreviouseParent = parentFolder.ParentFolderId } };
+
+                return Ok(result.Concat(x));
             }
             return Unauthorized();
         }

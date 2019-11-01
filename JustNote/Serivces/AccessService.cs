@@ -122,7 +122,7 @@ namespace JustNote.Serivces
             {
                 Folder folder = FolderService.GetFolder(AvailableFolderId.FolderId).GetAwaiter().GetResult();
 
-                if (!folderIds.Contains(folder.ParentFolderId))
+                if (folder != null && !folderIds.Contains(folder.ParentFolderId))
                 {
                     JObject addToResult = JObject.FromObject(folder);
                     addToResult.Add("Role", AvailableFolderId.Role);
@@ -134,7 +134,7 @@ namespace JustNote.Serivces
             {
                 Note note = NoteService.GetNote(availableNote.NoteId).GetAwaiter().GetResult();
 
-                if (!folderIds.Contains(note.FolderId))
+                if (note != null && !folderIds.Contains(note.FolderId))
                 {
                     JObject addToResult = JObject.FromObject(NoteService.GetNote(availableNote.NoteId).GetAwaiter().GetResult());
                     addToResult.Add("Role", availableNote.Role);

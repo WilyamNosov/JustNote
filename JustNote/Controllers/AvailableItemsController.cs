@@ -21,95 +21,143 @@ namespace JustNote.Controllers
         [HttpGet]
         public IActionResult GetItems(string token)
         {
-            if (new TokenManagerService().ValidateToken(token, out userName, out hashKey))
+            try
             {
-                User user = new UserService().GetUser(userName, hashKey).GetAwaiter().GetResult();
+                if (new TokenManagerService().ValidateToken(token, out userName, out hashKey))
+                {
 
-                IEnumerable<Object> result = access.GetAvailableItems(user.Id).GetAwaiter().GetResult();
+                    User user = new UserService().GetUser(userName, hashKey).GetAwaiter().GetResult();
 
-                return Ok(result);
+                    IEnumerable<Object> result = access.GetAvailableItems(user.Id).GetAwaiter().GetResult();
+
+                    return Ok(result);
+                }
+                return Unauthorized();
+
+            } 
+            catch
+            {
+                return BadRequest();
             }
-            return Unauthorized();
         }
+
         [HttpGet("{id}")]
         public IActionResult GetItemsFromFolder(string id, string token)
         {
-            if (new TokenManagerService().ValidateToken(token, out userName, out hashKey))
+            try
             {
-                User user = new UserService().GetUser(userName, hashKey).GetAwaiter().GetResult();
+                if (new TokenManagerService().ValidateToken(token, out userName, out hashKey))
+                {
+                    User user = new UserService().GetUser(userName, hashKey).GetAwaiter().GetResult();
 
-                IEnumerable<Object> result = access.GetAvailableItemsFromFolder(id, user.Id).GetAwaiter().GetResult();
+                    IEnumerable<Object> result = access.GetAvailableItemsFromFolder(id, user.Id).GetAwaiter().GetResult();
 
-                Folder parentFolder = folderData.GetFolder(id).GetAwaiter().GetResult();
-                IEnumerable<Object> x = new List<Object>() { new TimedModel() { PreviouseParent = parentFolder.ParentFolderId } };
+                    Folder parentFolder = folderData.GetFolder(id).GetAwaiter().GetResult();
+                    IEnumerable<Object> x = new List<Object>() { new TimedModel() { PreviouseParent = parentFolder.ParentFolderId } };
 
-                return Ok(result.Concat(x));
+                    return Ok(result.Concat(x));
+                }
+                return Unauthorized();
             }
-            return Unauthorized();
+            catch
+            {
+                return BadRequest();
+            }
         }
         [HttpPost("Create/Folder/{id}")]
-        public IActionResult CreateNewNote(string id, string token, [FromBody]Folder folder)
+        public IActionResult CreateNewFoler(string id, string token, [FromBody]Folder folder)
         {
-            if (new TokenManagerService().ValidateToken(token, out userName, out hashKey))
+            try
             {
-                User user = new UserService().GetUser(userName, hashKey).GetAwaiter().GetResult();
+                if (new TokenManagerService().ValidateToken(token, out userName, out hashKey))
+                {
+                    User user = new UserService().GetUser(userName, hashKey).GetAwaiter().GetResult();
 
-                folder.FolderDate = DateTime.Now;
-                folder.UserId = new FolderService().GetFolder(id).GetAwaiter().GetResult().UserId;
-                folder.ParentFolderId = id;
+                    folder.FolderDate = DateTime.Now;
+                    folder.UserId = new FolderService().GetFolder(id).GetAwaiter().GetResult().UserId;
+                    folder.ParentFolderId = id;
 
-                new FolderService().CreateFolder(folder).GetAwaiter().GetResult();
-                return Ok();
+                    new FolderService().CreateFolder(folder).GetAwaiter().GetResult();
+                    return Ok();
+                }
+
+                return Unauthorized();
+            } 
+            catch
+            {
+                return BadRequest();
             }
-
-            return Unauthorized();
         }
         [HttpPost("Folder/{id}")]
         public IActionResult GetFolderAccess(string id, string token, [FromBody]Object inputValue)
         {
-            if (new TokenManagerService().ValidateToken(token, out userName, out hashKey))
+            try
             {
-                string userEmail = JObject.Parse(inputValue.ToString()).Value<String>("UserEmail");
-                string role = JObject.Parse(inputValue.ToString()).Value<String>("Role");
-                string userId = new UserService().GetUserByEmail(userEmail).GetAwaiter().GetResult().Id;
+                if (new TokenManagerService().ValidateToken(token, out userName, out hashKey))
+                {
+                    string userEmail = JObject.Parse(inputValue.ToString()).Value<String>("UserEmail");
+                    string role = JObject.Parse(inputValue.ToString()).Value<String>("Role");
+                    string userId = new UserService().GetUserByEmail(userEmail).GetAwaiter().GetResult().Id;
 
-                access.CreateNewFolderAccess(userId, id, role).GetAwaiter().GetResult();
-                return Ok();
+                    access.CreateNewFolderAccess(userId, id, role).GetAwaiter().GetResult();
+                    return Ok();
+                }
+
+                return Unauthorized();
+
             }
-
-            return Unauthorized();
+            catch
+            {
+                return BadRequest();
+            }
         }
         [HttpPost("Create/Note/{id}")]
         public IActionResult CreateNewNote(string id, string token, [FromBody]Note note)
         {
-            if (new TokenManagerService().ValidateToken(token, out userName, out hashKey))
+            try
             {
-                User user = new UserService().GetUser(userName, hashKey).GetAwaiter().GetResult();
+                if (new TokenManagerService().ValidateToken(token, out userName, out hashKey))
+                {
+                    User user = new UserService().GetUser(userName, hashKey).GetAwaiter().GetResult();
 
-                note.NoteDate = DateTime.Now;
-                note.UserId = new FolderService().GetFolder(id).GetAwaiter().GetResult().UserId;
-                note.FolderId = id;
+                    note.NoteDate = DateTime.Now;
+                    note.UserId = new FolderService().GetFolder(id).GetAwaiter().GetResult().UserId;
+                    note.FolderId = id;
 
-                new NoteService().CreateNote(note).GetAwaiter().GetResult();
-                return Ok();
+                    new NoteService().CreateNote(note).GetAwaiter().GetResult();
+                    return Ok();
+                }
+
+                return Unauthorized();
+
             }
-
-            return Unauthorized();
+            catch
+            {
+                return BadRequest();
+            }
         }
         [HttpPost("Note/{id}")]
-        public IActionResult GetNoteAccess(string id, string token, [FromBody]Object inputValue)
+        public IActionResult CreateNewNoteAccess(string id, string token, [FromBody]Object inputValue)
         {
-            if (new TokenManagerService().ValidateToken(token, out userName, out hashKey))
+            try
             {
-                string userEmail = JObject.Parse(inputValue.ToString()).Value<String>("UserEmail");
-                string role = JObject.Parse(inputValue.ToString()).Value<String>("Role");
-                string userId = new UserService().GetUserByEmail(userEmail).GetAwaiter().GetResult().Id;
-                
-                access.CreateNewNoteAccess(userId, id, role).GetAwaiter().GetResult();
-                return Ok();
-            }
+                if (new TokenManagerService().ValidateToken(token, out userName, out hashKey))
+                {
+                    string userEmail = JObject.Parse(inputValue.ToString()).Value<String>("UserEmail");
+                    string role = JObject.Parse(inputValue.ToString()).Value<String>("Role");
+                    string userId = new UserService().GetUserByEmail(userEmail).GetAwaiter().GetResult().Id;
 
-            return Unauthorized();
+                    access.CreateNewNoteAccess(userId, id, role).GetAwaiter().GetResult();
+                    return Ok();
+                }
+
+                return Unauthorized();
+
+            }
+            catch
+            {
+                return BadRequest();
+            }
         }
     }
 }

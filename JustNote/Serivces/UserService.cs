@@ -15,6 +15,7 @@ namespace JustNote.Serivces
         {
 
         }
+
         public async Task<bool> CreateUser(Registration newUser, string hashKey)
         {
             User generateUser = new User()
@@ -27,50 +28,47 @@ namespace JustNote.Serivces
                 PhoneNumber = newUser.PhoneNumber,
                 ConfirmedEmail = false
             };
+
             if (CheckUserInDB(generateUser))
             {
                 await Users.InsertOneAsync(generateUser);
                 return true;
             }
+
             return false;
         }
+
         public async Task<User> GetUser(string username, string hashkey)
         {
-            FilterDefinition<User> filterByName = Builders<User>.Filter.And(
-                new List<FilterDefinition<User>> {
-                    Builders<User>.Filter.Eq("UserName", username),
-                    Builders<User>.Filter.Eq("HashKey", hashkey)
-                });
+            List<string> paramList = new List<string>() { "HashKey", "UserName", "Email", "PhoneNumber" };
+            List<object> valueList = new List<object>() { hashkey, username };
 
-            if (await Users.Find(filterByName).FirstOrDefaultAsync() != null)
-                return await Users.Find(filterByName).FirstOrDefaultAsync();
+            FilterDefinition<User> filter = FilterService<User>.GetFilterByTwoParam(paramList, valueList);
 
-            FilterDefinition<User> filterByEmail = Builders<User>.Filter.And(
-                new List<FilterDefinition<User>> {
-                    Builders<User>.Filter.Eq("Email", username),
-                    Builders<User>.Filter.Eq("HashKey", hashkey)
-                });
+            if (await Users.Find(filter).FirstOrDefaultAsync() != null)
+                return await Users.Find(filter).FirstOrDefaultAsync();            
+            paramList.Remove("UserName");
 
-            if (await Users.Find(filterByEmail).FirstOrDefaultAsync() != null)
-                return await Users.Find(filterByEmail).FirstOrDefaultAsync();
+            filter = FilterService<User>.GetFilterByTwoParam(paramList, valueList);
 
-            FilterDefinition<User> filterByNumber = Builders<User>.Filter.And(
-                new List<FilterDefinition<User>> {
-                    Builders<User>.Filter.Eq("PhoneNumber", username),
-                    Builders<User>.Filter.Eq("HashKey", hashkey)
-                });
+            if (await Users.Find(filter).FirstOrDefaultAsync() != null)
+                return await Users.Find(filter).FirstOrDefaultAsync();
+            paramList.Remove("Email");
 
-            if (await Users.Find(filterByNumber).FirstOrDefaultAsync() != null)
-                return await Users.Find(filterByNumber).FirstOrDefaultAsync();
+            filter = FilterService<User>.GetFilterByTwoParam(paramList, valueList);
+
+            if (await Users.Find(filter).FirstOrDefaultAsync() != null)
+                return await Users.Find(filter).FirstOrDefaultAsync();
 
             return null;
         }
+
         public async Task<User> GetUserByEmail(string userEmail)
         {
-            FilterDefinition<User> filterByEmail = Builders<User>.Filter.Eq("Email", userEmail);
+            FilterDefinition<User> filter = FilterService<User>.GetFilterByOneParam("Email", userEmail);
 
-            if (await Users.Find(filterByEmail).FirstOrDefaultAsync() != null)
-                return await Users.Find(filterByEmail).FirstOrDefaultAsync();
+            if (await Users.Find(filter).FirstOrDefaultAsync() != null)
+                return await Users.Find(filter).FirstOrDefaultAsync();
 
             return null;
         }
@@ -87,11 +85,9 @@ namespace JustNote.Serivces
             
             return true;
         }
-        public async Task UpdateUser(User user)
-        {
-            await Users.ReplaceOneAsync(new BsonDocument("_id", new ObjectId(user.Id)), user);
-        }
-
+        
+        public async Task UpdateUser(User user) => await Users.ReplaceOneAsync(new BsonDocument("_id", new ObjectId(user.Id)), user);
+        
         private async Task<IEnumerable<User>> GetAllUsers() => await Users.Find(new BsonDocument()).ToListAsync();
     }
 }

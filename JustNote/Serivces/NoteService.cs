@@ -20,12 +20,15 @@ namespace JustNote.Serivces
         {
             await Notes.InsertOneAsync(note); 
             
-            AccessService accessService = new AccessService();
-            IEnumerable<AvailableFolder> accessFolders = accessService.GetAvailableFoldersByFolderId(note.FolderId).GetAwaiter().GetResult();
-
-            foreach (AvailableFolder accessFolder in accessFolders)
+            if (note.FolderId != null)
             {
-                accessService.CreateNewNoteAccess(accessFolder.UserId, note.Id, accessFolder.Role).GetAwaiter().GetResult();
+                AccessService accessService = new AccessService();
+                IEnumerable<AvailableFolder> accessFolders = accessService.GetAvailableFoldersByFolderId(note.FolderId).GetAwaiter().GetResult();
+
+                foreach (AvailableFolder accessFolder in accessFolders)
+                {
+                    accessService.CreateNewNoteAccess(accessFolder.UserId, note.Id, accessFolder.Role).GetAwaiter().GetResult();
+                }
             }
         }
         public async Task<Note> GetNote(string id)
@@ -34,37 +37,19 @@ namespace JustNote.Serivces
         }
         public async Task<IEnumerable<Note>> GetAllUserNotes(string userId)
         {
-            FilterDefinitionBuilder<Note> builder = new FilterDefinitionBuilder<Note>();
-            FilterDefinition<Note> filter = builder.Empty;
+            if (String.IsNullOrWhiteSpace(userId))
+                return null;
 
-            if (!String.IsNullOrWhiteSpace(userId))
-            {
-                filter = filter & builder.Eq("UserId", new ObjectId(userId));
-            }
+            FilterDefinition<Note> filter = FilterService<Note>.GetFilterByOneParam("UserId", new ObjectId(userId));
 
             return await Notes.Find(filter).ToListAsync();
         }
         public async Task<IEnumerable<Note>> GetAllNotesFromFolder(string parentFolderId)
         {
-            FilterDefinitionBuilder<Note> builder = new FilterDefinitionBuilder<Note>();
-            FilterDefinition<Note> filter = builder.Empty;
+            if (String.IsNullOrWhiteSpace(parentFolderId))
+                return null;
 
-            if (!String.IsNullOrWhiteSpace(parentFolderId))
-            {
-                filter = filter & builder.Eq("FolderId", new ObjectId(parentFolderId));
-            }
-
-            return await Notes.Find(filter).ToListAsync();
-        }
-        public async Task<IEnumerable<Note>> GetNoteBySearchString(string searchString)
-        {
-            FilterDefinitionBuilder<Note> builder = new FilterDefinitionBuilder<Note>();
-            FilterDefinition<Note> filter = builder.Empty;
-
-            if (!String.IsNullOrWhiteSpace(searchString))
-            {
-                filter = filter & builder.Gte("Name", searchString);
-            }
+            FilterDefinition<Note> filter = FilterService<Note>.GetFilterByOneParam("FolderId", new ObjectId(parentFolderId));
 
             return await Notes.Find(filter).ToListAsync();
         }
@@ -82,5 +67,17 @@ namespace JustNote.Serivces
         {
             await Notes.DeleteOneAsync(new BsonDocument("_id", new ObjectId(noteId)));
         }
+        //public async Task<IEnumerable<Note>> GetNoteBySearchString(string searchString)
+        //{
+        //    FilterDefinitionBuilder<Note> builder = new FilterDefinitionBuilder<Note>();
+        //    FilterDefinition<Note> filter = builder.Empty;
+
+        //    if (!String.IsNullOrWhiteSpace(searchString))
+        //    {
+        //        filter = filter & builder.Gte("Name", searchString);
+        //    }
+
+        //    return await Notes.Find(filter).ToListAsync();
+        //}
     }
 }

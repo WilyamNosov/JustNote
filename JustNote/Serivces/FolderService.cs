@@ -22,11 +22,10 @@ namespace JustNote.Serivces
 
             AccessService accessService = new AccessService();
             IEnumerable<AvailableFolder> accessFolders = accessService.GetAvailableFoldersByFolderId(folder.ParentFolderId).GetAwaiter().GetResult();
-            
-            foreach (AvailableFolder accessFolder in accessFolders)
-            {
-                accessService.CreateNewFolderAccess(accessFolder.UserId, folder.Id, accessFolder.Role).GetAwaiter().GetResult();
-            }
+
+            if (folder.ParentFolderId != null)
+                foreach (AvailableFolder accessFolder in accessFolders)
+                    accessService.CreateNewFolderAccess(accessFolder.UserId, folder.Id, accessFolder.Role).GetAwaiter().GetResult();
         }
         public async Task<Folder> GetFolder(string id)
         {
@@ -37,37 +36,19 @@ namespace JustNote.Serivces
         }
         public async Task<IEnumerable<Folder>> GetAllUserFolders(string userId)
         {
-            FilterDefinitionBuilder<Folder> builder = new FilterDefinitionBuilder<Folder>();
-            FilterDefinition<Folder> filter = builder.Empty;
+            if (String.IsNullOrWhiteSpace(userId))
+                return null;
 
-            if (!String.IsNullOrWhiteSpace(userId))
-            {
-                filter = filter & builder.Eq("UserId", new ObjectId(userId));
-            }
-
+            FilterDefinition<Folder> filter = FilterService<Folder>.GetFilterByOneParam("UserId", new ObjectId(userId));
+            
             return await Folders.Find(filter).ToListAsync();
         }
         public async Task<IEnumerable<Folder>> GetAllChildFolder(string folderId)
         {
-            FilterDefinitionBuilder<Folder> builder = new FilterDefinitionBuilder<Folder>();
-            FilterDefinition<Folder> filter = builder.Empty;
+            if (String.IsNullOrWhiteSpace(folderId))
+                return null;
 
-            if (!String.IsNullOrWhiteSpace(folderId))
-            {
-                filter = filter & builder.Eq("ParentFolderId", new ObjectId(folderId));
-            }
-
-            return await Folders.Find(filter).ToListAsync();
-        }
-        public async Task<IEnumerable<Folder>> GetFolderBySearchString(string searchString)
-        {
-            FilterDefinitionBuilder<Folder> builder = new FilterDefinitionBuilder<Folder>();
-            FilterDefinition<Folder> filter = builder.Empty;
-
-            if (!String.IsNullOrWhiteSpace(searchString))
-            {
-                filter = filter & builder.Gte("Name", searchString);
-            }
+            FilterDefinition<Folder> filter = FilterService<Folder>.GetFilterByOneParam("ParentFolderId", new ObjectId(folderId));
 
             return await Folders.Find(filter).ToListAsync();
         }
@@ -83,20 +64,30 @@ namespace JustNote.Serivces
         public async Task DeleteFolder(string parentFolderId)
         {
             NoteService noteService = new NoteService();
-            FolderService folderService = new FolderService();
+
             IEnumerable<Note> notesInFolder = await noteService.GetAllNotesFromFolder(parentFolderId);
-            IEnumerable<Folder> childFolders = await folderService.GetAllChildFolder(parentFolderId);
+            IEnumerable<Folder> childFolders = await GetAllChildFolder(parentFolderId);
 
             foreach (Note note in notesInFolder)
-            {
                 await noteService.DeleteNote(note.Id);
-            }
+            
             foreach (Folder childFolder in childFolders)
-            {
-                await folderService.DeleteFolder(childFolder.Id);
-            }
+                await DeleteFolder(childFolder.Id);
+            
 
             await Folders.DeleteOneAsync(new BsonDocument("_id", new ObjectId(parentFolderId)));
         }
     }
+    /*public async Task<IEnumerable<Folder>> GetFolderBySearchString(string searchString)
+    {
+        FilterDefinitionBuilder<Folder> builder = new FilterDefinitionBuilder<Folder>();
+        FilterDefinition<Folder> filter = builder.Empty;
+
+        if (!String.IsNullOrWhiteSpace(searchString))
+        {
+            filter = filter & builder.Gte("Name", searchString);
+        }
+
+        return await Folders.Find(filter).ToListAsync();
+    }*/
 }

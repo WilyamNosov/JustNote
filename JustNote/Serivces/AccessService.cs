@@ -21,22 +21,20 @@ namespace JustNote.Serivces
         }
         public async Task<IEnumerable<AvailableFolder>> GetAvailableFoldersByFolderId(string folderId)
         {
-            FilterDefinitionBuilder<AvailableFolder> builder = new FilterDefinitionBuilder<AvailableFolder>();
-            FilterDefinition<AvailableFolder> filter = builder.Empty;
+            if (String.IsNullOrWhiteSpace(folderId))
+                return null;
 
-            if (!String.IsNullOrWhiteSpace(folderId))
-                filter = filter & builder.Eq("FolderId", new ObjectId(folderId));
+            FilterDefinition<AvailableFolder> filter = FilterService<AvailableFolder>.GetFilterByOneParam("FolderId", new ObjectId(folderId));
 
             return await AccessFolders.Find(filter).ToListAsync();
         }
         public async Task<AvailableFolder> GetAvailableFolder(string folderId, string userId)
         {
-            FilterDefinition<AvailableFolder> filter = Builders<AvailableFolder>.Filter.And(
-                new List<FilterDefinition<AvailableFolder>> {
-                    Builders<AvailableFolder>.Filter.Eq("FolderId", folderId),
-                    Builders<AvailableFolder>.Filter.Eq("UserId", userId)
-                });
+            List<string> paramList = new List<string>() { "FolderId", "UserId" };
+            List<object> valueList = new List<object>() { new ObjectId(folderId), new ObjectId(userId)};
 
+            FilterDefinition<AvailableFolder> filter = FilterService<AvailableFolder>.GetFilterByTwoParam(paramList, valueList);
+            
             if (await AccessFolders.Find(filter).FirstOrDefaultAsync() != null)
                 return await AccessFolders.Find(filter).FirstOrDefaultAsync();
 
@@ -45,11 +43,10 @@ namespace JustNote.Serivces
 
         public async Task<AvailableNote> GetAvailableNote(string noteId, string userId)
         {
-            FilterDefinition<AvailableNote> filter = Builders<AvailableNote>.Filter.And(
-                new List<FilterDefinition<AvailableNote>> {
-                    Builders<AvailableNote>.Filter.Eq("NoteId", noteId),
-                    Builders<AvailableNote>.Filter.Eq("UserId", userId)
-                });
+            List<string> paramList = new List<string>() { "NoteId", "UserId" };
+            List<object> valueList = new List<object>() { new ObjectId(noteId), new ObjectId(userId) };
+
+            FilterDefinition<AvailableNote> filter = FilterService<AvailableNote>.GetFilterByTwoParam(paramList, valueList);
 
             if (await AccessNotes.Find(filter).FirstOrDefaultAsync() != null)
                 return await AccessNotes.Find(filter).FirstOrDefaultAsync();

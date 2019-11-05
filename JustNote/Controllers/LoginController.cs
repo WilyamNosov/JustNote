@@ -22,7 +22,7 @@ namespace JustNote.Controllers
             LoginRetunForm retunForm = new LoginRetunForm();
             
             User user = new UserService().GetUser(userName, new HashKeyService().GetHashKey(password)).GetAwaiter().GetResult();
-            if (user != null)
+            if (user != null && user.ConfirmedEmail == true)
                 return Ok(new TokenManagerService().GenerateToken(userName, user.HashKey));
              
             return Unauthorized();

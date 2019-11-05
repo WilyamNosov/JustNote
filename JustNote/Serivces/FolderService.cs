@@ -52,10 +52,11 @@ namespace JustNote.Serivces
 
             return await Folders.Find(filter).ToListAsync();
         }
-        public async Task UpdateFolder(string id, string userId, Folder folder)
+        public async Task UpdateFolder(string id, Folder folder)
         {
+            Folder oldFolder = GetFolder(id).GetAwaiter().GetResult();
             folder.Id = id;
-            folder.UserId = userId;
+            folder.UserId = oldFolder.UserId;
             folder.FolderDate = DateTime.Now;
             folder.ParentFolderId = GetFolder(id).GetAwaiter().GetResult().ParentFolderId;
 

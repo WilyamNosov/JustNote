@@ -91,8 +91,7 @@ namespace JustNote.Controllers
         {
             if (new TokenManagerService().ValidateToken(token, out userName, out hashKey))
             {
-                User user = new UserService().GetUser(userName, hashKey).GetAwaiter().GetResult();
-                folderData.UpdateFolder(id, user.Id, folder).GetAwaiter().GetResult();
+                folderData.UpdateFolder(id, folder).GetAwaiter().GetResult();
 
                 return Ok();
             }

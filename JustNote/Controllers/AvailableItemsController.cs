@@ -25,12 +25,9 @@ namespace JustNote.Controllers
             {
                 if (new TokenManagerService().ValidateToken(token, out userName, out hashKey))
                 {
-
                     User user = new UserService().GetUser(userName, hashKey).GetAwaiter().GetResult();
 
-                    IEnumerable<Object> result = access.GetAvailableItems(user.Id).GetAwaiter().GetResult();
-
-                    return Ok(result);
+                    return Ok(access.GetAvailableItems(user.Id).GetAwaiter().GetResult());
                 }
                 return Unauthorized();
 
@@ -51,11 +48,9 @@ namespace JustNote.Controllers
                     User user = new UserService().GetUser(userName, hashKey).GetAwaiter().GetResult();
 
                     IEnumerable<Object> result = access.GetAvailableItemsFromFolder(id, user.Id).GetAwaiter().GetResult();
-
                     Folder parentFolder = folderData.GetFolder(id).GetAwaiter().GetResult();
-                    IEnumerable<Object> x = new List<Object>() { new TimedModel() { PreviouseParent = parentFolder.ParentFolderId } };
 
-                    return Ok(result.Concat(x));
+                    return Ok(result.Concat(new List<Object>() { new TimedModel() { PreviouseParent = parentFolder.ParentFolderId } }));
                 }
                 return Unauthorized();
             }

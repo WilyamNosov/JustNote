@@ -21,11 +21,11 @@ namespace JustNote.Serivces
             await Folders.InsertOneAsync(folder);
 
             AccessService accessService = new AccessService();
-            IEnumerable<AvailableFolder> accessFolders = accessService.GetAvailableFoldersByFolderId(folder.ParentFolderId).GetAwaiter().GetResult();
+            IEnumerable<AvailableFolder> accessFolders = await accessService.GetAvailableFoldersByFolderId(folder.ParentFolderId);
 
             if (folder.ParentFolderId != null)
                 foreach (AvailableFolder accessFolder in accessFolders)
-                    accessService.CreateNewFolderAccess(accessFolder.UserId, folder.Id, accessFolder.Role).GetAwaiter().GetResult();
+                    await accessService.CreateNewFolderAccess(accessFolder.UserId, folder.Id, accessFolder.Role);
         }
         public async Task<Folder> GetFolder(string id)
         {

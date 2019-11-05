@@ -59,55 +59,62 @@ namespace JustNote.Serivces
             IEnumerable<Note> notesInFolder = await new NoteService().GetAllNotesFromFolder(folderId);
             IEnumerable<Folder> childFolders = await new FolderService().GetAllChildFolder(folderId);
 
-
             foreach (Folder folder in childFolders)
-            {
-                CreateNewFolderAccess(userId, folder.Id, role).GetAwaiter().GetResult();
-            }
+                await CreateNewFolderAccess(userId, folder.Id, role);
 
             foreach (Note note in notesInFolder)
-            {
-                if(GetAvailableNote(note.Id, userId).GetAwaiter().GetResult() == null)
-                    CreateNewNoteAccess(userId, note.Id, role).GetAwaiter().GetResult();
-            }
+                await CreateNewNoteAccess(userId, note.Id, role);
 
-            AvailableFolder availableFolder = new AvailableFolder()
-            {
-                UserId = userId,
-                FolderId = folderId,
-                Role = role
-            };
+            AvailableFolder availableFolder = await GetAvailableFolder(folderId, userId);
 
-            if (GetAvailableFolder(folderId, userId).GetAwaiter().GetResult() == null)
+            
+            if (availableFolder == null)
+            {
+                availableFolder = new AvailableFolder()
+                {
+                    UserId = userId,
+                    FolderId = folderId,
+                    Role = role
+                };
+
                 await AccessFolders.InsertOneAsync(availableFolder);
+            } else if (availableFolder.Role != role)
+            {
+                availableFolder.Role = role;
+                await UpdateFolderAccess(availableFolder);
+            }
         }
         public async Task CreateNewNoteAccess(string userId, string noteId, string role)
         {
-            AvailableNote availableNote = new AvailableNote()
+            AvailableNote availableNote = await GetAvailableNote(noteId, userId); 
+            
+            if (availableNote == null)
             {
-                UserId = userId,
-                NoteId = noteId,
-                Role = role
-            };
-
-            if (GetAvailableNote(noteId, userId).GetAwaiter().GetResult() == null)
+                availableNote = new AvailableNote()
+                {
+                    UserId = userId,
+                    NoteId = noteId,
+                    Role = role
+                };
                 await AccessNotes.InsertOneAsync(availableNote);
+            }
+
+            else if (availableNote.Role != role)
+            {
+                availableNote.Role = role;
+                await UpdateNoteAccess(availableNote);
+            }
         }
 
         public async Task<IEnumerable<Object>> GetAvailableItems(string userId)
         {
-            FilterDefinitionBuilder<AvailableFolder> builderFolder = new FilterDefinitionBuilder<AvailableFolder>();
-            FilterDefinitionBuilder<AvailableNote> builderNote = new FilterDefinitionBuilder<AvailableNote>();
-            FilterDefinition<AvailableFolder> filterFolder = builderFolder.Empty;
-            FilterDefinition<AvailableNote> filterNote = builderNote.Empty;
+            if (String.IsNullOrWhiteSpace(userId))
+                return null;
+
+            FilterDefinition<AvailableFolder> filterFolder = FilterService<AvailableFolder>.GetFilterByOneParam("UserId", new ObjectId(userId));
+            FilterDefinition<AvailableNote> filterNote = FilterService<AvailableNote>.GetFilterByOneParam("UserId", new ObjectId(userId));
             List<Object> result = new List<Object>();
             List<string> folderIds = new List<string>();
-
-            if (!string.IsNullOrWhiteSpace(userId))
-            {
-                filterFolder = filterFolder & builderFolder.Eq("UserId", new ObjectId(userId));
-                filterNote = filterNote & builderNote.Eq("UserId", new ObjectId(userId));
-            }
 
             List<AvailableFolder> AvailableFolerIds = await AccessFolders.Find(filterFolder).ToListAsync();
             List<AvailableNote> AvailableNoteIds = await AccessNotes.Find(filterNote).ToListAsync();
@@ -164,5 +171,8 @@ namespace JustNote.Serivces
 
             return result;
         }
+        public async Task UpdateNoteAccess(AvailableNote availableNote) => await AccessNotes.ReplaceOneAsync(new BsonDocument("_id", new ObjectId(availableNote.Id)), availableNote);
+        public async Task UpdateFolderAccess(AvailableFolder availableFolder) => await AccessFolders.ReplaceOneAsync(new BsonDocument("_id", new ObjectId(availableFolder.Id)), availableFolder);
+
     }
 }

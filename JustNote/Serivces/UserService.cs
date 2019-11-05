@@ -79,7 +79,7 @@ namespace JustNote.Serivces
 
             foreach (User user in users)
             {
-                if (newUser.UserName == user.UserName || newUser.Email == user.Email || newUser.PhoneNumber == user.PhoneNumber)
+                if (newUser.UserName == user.UserName || newUser.Email == user.Email )//|| newUser.PhoneNumber == user.PhoneNumber)
                     return false;
             }
             

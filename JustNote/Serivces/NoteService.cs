@@ -23,11 +23,11 @@ namespace JustNote.Serivces
             if (note.FolderId != null)
             {
                 AccessService accessService = new AccessService();
-                IEnumerable<AvailableFolder> accessFolders = accessService.GetAvailableFoldersByFolderId(note.FolderId).GetAwaiter().GetResult();
+                IEnumerable<AvailableFolder> accessFolders = await accessService.GetAvailableFoldersByFolderId(note.FolderId);
 
                 foreach (AvailableFolder accessFolder in accessFolders)
                 {
-                    accessService.CreateNewNoteAccess(accessFolder.UserId, note.Id, accessFolder.Role).GetAwaiter().GetResult();
+                    await accessService.CreateNewNoteAccess(accessFolder.UserId, note.Id, accessFolder.Role);
                 }
             }
         }

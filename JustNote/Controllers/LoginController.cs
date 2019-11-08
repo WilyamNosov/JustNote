@@ -15,15 +15,18 @@ namespace JustNote.Controllers
     public class LoginController : Controller
     {
         [HttpPost]
-        public IActionResult LoginUser(Login loginObject)
+        public async Task<IActionResult> LoginUser(Login loginObject)
         {
-            string userName = loginObject.UserName;
-            string password = loginObject.UserPassword;
-            LoginRetunForm retunForm = new LoginRetunForm();
+            var userName = loginObject.UserName;
+            var password = loginObject.UserPassword;
             
-            User user = new UserService().GetUser(userName, new HashKeyService().GetHashKey(password)).GetAwaiter().GetResult();
+            var user = await new UserService().GetUser(userName, new HashKeyService().GetHashKey(password));
+            
             if (user != null && user.ConfirmedEmail == true)
-                return Ok(new TokenManagerService().GenerateToken(userName, user.HashKey));
+            {
+                var token = new TokenManagerService().GenerateToken(userName, user.HashKey);
+                return Ok(token);
+            }
              
             return Unauthorized();
         }

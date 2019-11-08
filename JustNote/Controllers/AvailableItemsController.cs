@@ -19,15 +19,16 @@ namespace JustNote.Controllers
         private AccessService access = new AccessService();
         
         [HttpGet]
-        public IActionResult GetItems(string token)
+        public async Task<IActionResult> GetItems(string token)
         {
             try
             {
-                if (new TokenManagerService().ValidateToken(token, out userName, out hashKey))
+                var tokenManagerService = new TokenManagerService();
+                if (tokenManagerService.ValidateToken(token, out userName, out hashKey))
                 {
-                    User user = new UserService().GetUser(userName, hashKey).GetAwaiter().GetResult();
-
-                    return Ok(access.GetAvailableItems(user.Id).GetAwaiter().GetResult());
+                    var user = await new UserService().GetUser(userName, hashKey);
+                    var result = await access.GetAvailableItems(user.Id);
+                    return Ok(result);
                 }
                 return Unauthorized();
 
@@ -39,18 +40,20 @@ namespace JustNote.Controllers
         }
 
         [HttpGet("{id}")]
-        public IActionResult GetItemsFromFolder(string id, string token)
+        public async Task<IActionResult> GetItemsFromFolder(string id, string token)
         {
             try
             {
-                if (new TokenManagerService().ValidateToken(token, out userName, out hashKey))
+                var tokenManagerService = new TokenManagerService();
+                if (tokenManagerService.ValidateToken(token, out userName, out hashKey))
                 {
-                    User user = new UserService().GetUser(userName, hashKey).GetAwaiter().GetResult();
+                    var user = await new UserService().GetUser(userName, hashKey);
 
-                    IEnumerable<Object> result = access.GetAvailableItemsFromFolder(id, user.Id).GetAwaiter().GetResult();
-                    Folder parentFolder = folderData.GetFolder(id).GetAwaiter().GetResult();
+                    var result = await access.GetAvailableItemsFromFolder(id, user.Id);
+                    var parentFolder = await folderData.GetFolder(id);
+                    var previusparent = new List<Object>() { new TimedModel() { PreviouseParent = parentFolder.ParentFolderId } };
 
-                    return Ok(result.Concat(new List<Object>() { new TimedModel() { PreviouseParent = parentFolder.ParentFolderId } }));
+                    return Ok(result.Concat(previusparent));
                 }
                 return Unauthorized();
             }
@@ -60,19 +63,22 @@ namespace JustNote.Controllers
             }
         }
         [HttpPost("Create/Folder/{id}")]
-        public IActionResult CreateNewFoler(string id, string token, [FromBody]Folder folder)
+        public async Task<IActionResult> CreateNewFoler(string id, string token, [FromBody]Folder folder)
         {
             try
             {
-                if (new TokenManagerService().ValidateToken(token, out userName, out hashKey))
+                var tokenManagerService = new TokenManagerService();
+                if (tokenManagerService.ValidateToken(token, out userName, out hashKey))
                 {
-                    User user = new UserService().GetUser(userName, hashKey).GetAwaiter().GetResult();
+                    User user = await new UserService().GetUser(userName, hashKey);
+
+                    var parentFolder = await new FolderService().GetFolder(id);
 
                     folder.FolderDate = DateTime.Now;
-                    folder.UserId = new FolderService().GetFolder(id).GetAwaiter().GetResult().UserId;
+                    folder.UserId = parentFolder.UserId;
                     folder.ParentFolderId = id;
 
-                    new FolderService().CreateFolder(folder).GetAwaiter().GetResult();
+                    await new FolderService().CreateFolder(folder);
                     return Ok();
                 }
 
@@ -84,17 +90,18 @@ namespace JustNote.Controllers
             }
         }
         [HttpPost("Folder/{id}")]
-        public IActionResult GetFolderAccess(string id, string token, [FromBody]Object inputValue)
+        public async Task<IActionResult> GetFolderAccess(string id, string token, [FromBody]Object inputValue)
         {
             try
             {
-                if (new TokenManagerService().ValidateToken(token, out userName, out hashKey))
+                var tokenManagerService = new TokenManagerService();
+                if (tokenManagerService.ValidateToken(token, out userName, out hashKey))
                 {
                     string userEmail = JObject.Parse(inputValue.ToString()).Value<String>("UserEmail");
                     string role = JObject.Parse(inputValue.ToString()).Value<String>("Role");
                     string userId = new UserService().GetUserByEmail(userEmail).GetAwaiter().GetResult().Id;
 
-                    access.CreateNewFolderAccess(userId, id, role).GetAwaiter().GetResult();
+                    await access.CreateNewFolderAccess(userId, id, role);
                     return Ok();
                 }
 
@@ -107,19 +114,22 @@ namespace JustNote.Controllers
             }
         }
         [HttpPost("Create/Note/{id}")]
-        public IActionResult CreateNewNote(string id, string token, [FromBody]Note note)
+        public async Task<IActionResult> CreateNewNote(string id, string token, [FromBody]Note note)
         {
             try
             {
-                if (new TokenManagerService().ValidateToken(token, out userName, out hashKey))
+                var tokenManagerService = new TokenManagerService();
+                if (tokenManagerService.ValidateToken(token, out userName, out hashKey))
                 {
                     User user = new UserService().GetUser(userName, hashKey).GetAwaiter().GetResult();
 
+                    var parentFolder = await new FolderService().GetFolder(id);
+
                     note.NoteDate = DateTime.Now;
-                    note.UserId = new FolderService().GetFolder(id).GetAwaiter().GetResult().UserId;
+                    note.UserId = parentFolder.UserId;
                     note.FolderId = id;
 
-                    new NoteService().CreateNote(note).GetAwaiter().GetResult();
+                    await new NoteService().CreateNote(note);
                     return Ok();
                 }
 
@@ -132,17 +142,18 @@ namespace JustNote.Controllers
             }
         }
         [HttpPost("Note/{id}")]
-        public IActionResult CreateNewNoteAccess(string id, string token, [FromBody]Object inputValue)
+        public async Task<IActionResult> CreateNewNoteAccess(string id, string token, [FromBody]Object inputValue)
         {
             try
             {
-                if (new TokenManagerService().ValidateToken(token, out userName, out hashKey))
+                var tokenManagerService = new TokenManagerService();
+                if (tokenManagerService.ValidateToken(token, out userName, out hashKey))
                 {
-                    string userEmail = JObject.Parse(inputValue.ToString()).Value<String>("UserEmail");
-                    string role = JObject.Parse(inputValue.ToString()).Value<String>("Role");
-                    string userId = new UserService().GetUserByEmail(userEmail).GetAwaiter().GetResult().Id;
+                    var userEmail = JObject.Parse(inputValue.ToString()).Value<String>("UserEmail");
+                    var role = JObject.Parse(inputValue.ToString()).Value<String>("Role");
+                    var user = await new UserService().GetUserByEmail(userEmail);
 
-                    access.CreateNewNoteAccess(userId, id, role).GetAwaiter().GetResult();
+                    await access.CreateNewNoteAccess(user.Id, id, role);
                     return Ok();
                 }
 

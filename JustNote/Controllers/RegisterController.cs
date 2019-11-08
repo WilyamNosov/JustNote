@@ -34,10 +34,10 @@ namespace JustNote.Controllers
             string hashKey = new HashKeyService().GetHashKey(newUser.Password);
             if (new UserService().CreateUser(newUser, hashKey).GetAwaiter().GetResult())
             {
-                User user = new UserService().GetUserByEmail(newUser.Email).GetAwaiter().GetResult();
+                var user = new UserService().GetUserByEmail(newUser.Email).GetAwaiter().GetResult();
                 //string callbackUrl = @"http://localhost:58228/api/Register/" + new TokenManagerService().GenerateConfirmEmailToken(user.Email);
 
-                string callbackUrl = @"https://cb5eza7o22.execute-api.us-west-2.amazonaws.com/Prod/api/Register/" + new TokenManagerService().GenerateConfirmEmailToken(user.Email);
+                var callbackUrl = @"https://cb5eza7o22.execute-api.us-west-2.amazonaws.com/Prod/api/Register/" + new TokenManagerService().GenerateConfirmEmailToken(user.Email);
 
                 await emailService.SendConfirmMessage(user.Email, "Confirm you account",
                     @"

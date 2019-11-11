@@ -349,3 +349,4 @@ healthchecksdb
 MigrationBackup/
 JustNote/Datas/DatabaseData.cs
 *.png
+JustNote/img/index.html

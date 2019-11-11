@@ -25,7 +25,7 @@ namespace JustNote.Controllers
                 return Ok();
             } catch (Exception ex)
             {
-                return Content(ex.Message);
+                return Redirect(ex.Message);
             }
         }
         [HttpPost]

@@ -25,7 +25,6 @@ namespace JustNote.Serivces
                     new Claim (ClaimTypes.Name, username),
                     new Claim (ClaimTypes.Hash, hashkey)
                 }),
-                Expires = DateTime.UtcNow.AddMinutes(120),
                 SigningCredentials = new SigningCredentials(securityKey,
                 SecurityAlgorithms.HmacSha256Signature)
             };

@@ -30,5 +30,19 @@ namespace JustNote.Controllers
              
             return Unauthorized();
         }
+        [HttpPost("{id}")]
+        public async Task<IActionResult> ValidateUser(string id)
+        {
+            var userName = "";
+            var userHashKey = "";
+            var tokenManagerService = new TokenManagerService();
+
+            if (tokenManagerService.ValidateToken(id, out userName, out userHashKey))
+            {
+                return Ok(id);
+            }
+
+            return Unauthorized();
+        }
     }
 }

@@ -1,30 +1,46 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using JustNote.Models;
 using JustNote.Serivces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace JustNote.Controllers
+namespace JustNotes.Controllers
 {
     [Route("api/Login")]
     [ApiController]
     public class LoginController : Controller
     {
         [HttpPost]
-        public IActionResult LoginUser(Login loginObject)
+        public async Task<IActionResult> LoginUser(Login loginObject)
         {
-            string userName = loginObject.UserName;
-            string password = loginObject.UserPassword;
-            LoginRetunForm retunForm = new LoginRetunForm();
-            
-            User user = new UserService().GetUser(userName, new HashKeyService().GetHashKey(password)).GetAwaiter().GetResult();
-            if (user != null)
-                return Ok(new TokenManagerService().GenerateToken(userName, user.HashKey));
-             
+            var userName = loginObject.UserName;
+            var password = loginObject.UserPassword;
+
+            var user = await new UserService().GetUser(userName, new HashKeyService().GetHashKey(password));
+
+            if (user != null && user.ConfirmedEmail == true)
+            {
+                var token = new TokenManagerService().GenerateToken(userName, user.HashKey);
+                return Ok(token);
+            }
+
+            return Unauthorized();
+        }
+        [HttpPost("{id}")]
+        public async Task<IActionResult> ValidateUser(string id)
+        {
+            var userName = "";
+            var userHashKey = "";
+            var tokenManagerService = new TokenManagerService();
+
+            if (tokenManagerService.ValidateToken(id, out userName, out userHashKey))
+            {
+                return Ok(id);
+            }
+
             return Unauthorized();
         }
     }

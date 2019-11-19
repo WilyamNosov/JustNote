@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using JustNote.Attributes;
 using JustNote.Models;
 using JustNote.Serivces;
 using Microsoft.AspNetCore.Http;
@@ -17,9 +18,9 @@ namespace JustNotes.Controllers
         private string hashKey;
         private NoteService noteData = new NoteService();
 
-        //[JustNotesAuthorize]
+        [JustNotesAuthorize]
         [HttpGet("{id}")]
-        public async Task<Note> Get(string id)
+        public async Task<Note> Get(string id, string token)
         {
             return await noteData.GetNote(id);
         }

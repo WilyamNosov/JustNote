@@ -42,10 +42,6 @@ namespace JustNote
                 });
             });
 
-<<<<<<< Updated upstream
-            // Add S3 to the ASP.NET Core dependency injection framework.
-=======
->>>>>>> Stashed changes
             services.AddAWSService<Amazon.S3.IAmazonS3>();
             services.AddSwaggerGen(c =>
             {

@@ -10,28 +10,36 @@ using System.Threading.Tasks;
 
 namespace JustNote.Serivces
 {
-    public class FolderService : DatabaseData
+    public class FolderService
     {
-        public FolderService() : base()
-        {
-
-        }
         public async Task CreateFolder(Folder folder)
         {
-            await Folders.InsertOneAsync(folder);
+            await DatabaseData.Folders.InsertOneAsync(folder);
 
+<<<<<<< Updated upstream
             AccessService accessService = new AccessService();
             IEnumerable<AvailableFolder> accessFolders = accessService.GetAvailableFoldersByFolderId(folder.ParentFolderId).GetAwaiter().GetResult();
             
             foreach (AvailableFolder accessFolder in accessFolders)
             {
                 accessService.CreateNewFolderAccess(accessFolder.UserId, folder.Id, accessFolder.Role).GetAwaiter().GetResult();
+=======
+            SharedService accessService = new SharedService();
+            IEnumerable<SharedFolder> accessFolders = await accessService.GetAvailableFoldersByFolderId(folder.ParentFolderId);
+
+            if (folder.ParentFolderId != null)
+            {
+                foreach (SharedFolder accessFolder in accessFolders)
+                {
+                    await accessService.CreateNewFolderAccess(accessFolder.UserId, folder.Id, accessFolder.Role);
+                }
+>>>>>>> Stashed changes
             }
         }
         public async Task<Folder> GetFolder(string id)
         {
             if (!String.IsNullOrWhiteSpace(id))
-                return await Folders.Find(new BsonDocument("_id", new ObjectId(id))).FirstOrDefaultAsync();
+                return await DatabaseData.Folders.Find(new BsonDocument("_id", new ObjectId(id))).FirstOrDefaultAsync();
 
             return null;
         }
@@ -45,7 +53,13 @@ namespace JustNote.Serivces
                 filter = filter & builder.Eq("UserId", new ObjectId(userId));
             }
 
+<<<<<<< Updated upstream
             return await Folders.Find(filter).ToListAsync();
+=======
+            FilterDefinition<Folder> filter = FilterService<Folder>.GetFilterByOneParam("UserId", new ObjectId(userId));
+
+            return await DatabaseData.Folders.Find(filter).ToListAsync();
+>>>>>>> Stashed changes
         }
         public async Task<IEnumerable<Folder>> GetAllChildFolder(string folderId)
         {
@@ -69,7 +83,7 @@ namespace JustNote.Serivces
                 filter = filter & builder.Gte("Name", searchString);
             }
 
-            return await Folders.Find(filter).ToListAsync();
+            return await DatabaseData.Folders.Find(filter).ToListAsync();
         }
         public async Task UpdateFolder(string id, string userId, Folder folder)
         {
@@ -78,7 +92,7 @@ namespace JustNote.Serivces
             folder.FolderDate = DateTime.Now;
             folder.ParentFolderId = GetFolder(id).GetAwaiter().GetResult().ParentFolderId;
 
-            await Folders.ReplaceOneAsync(new BsonDocument("_id", new ObjectId(folder.Id)), folder);
+            await DatabaseData.Folders.ReplaceOneAsync(new BsonDocument("_id", new ObjectId(folder.Id)), folder);
         }
         public async Task DeleteFolder(string parentFolderId)
         {
@@ -91,12 +105,19 @@ namespace JustNote.Serivces
             {
                 await noteService.DeleteNote(note.Id);
             }
+<<<<<<< Updated upstream
             foreach (Folder childFolder in childFolders)
             {
                 await folderService.DeleteFolder(childFolder.Id);
+=======
+
+            foreach (Folder childFolder in childFolders)
+            {
+                await DeleteFolder(childFolder.Id);
+>>>>>>> Stashed changes
             }
 
-            await Folders.DeleteOneAsync(new BsonDocument("_id", new ObjectId(parentFolderId)));
+            await DatabaseData.Folders.DeleteOneAsync(new BsonDocument("_id", new ObjectId(parentFolderId)));
         }
     }
 }

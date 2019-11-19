@@ -10,14 +10,11 @@ using System.Threading.Tasks;
 
 namespace JustNote.Serivces
 {
-    public class NoteService : DatabaseData
+    public class NoteService
     {
-        public NoteService() : base()
-        {
-
-        }
         public async Task CreateNote(Note note)
         {
+<<<<<<< Updated upstream
             await Notes.InsertOneAsync(note); 
             
             AccessService accessService = new AccessService();
@@ -26,11 +23,24 @@ namespace JustNote.Serivces
             foreach (AvailableFolder accessFolder in accessFolders)
             {
                 accessService.CreateNewNoteAccess(accessFolder.UserId, note.Id, accessFolder.Role).GetAwaiter().GetResult();
+=======
+            await DatabaseData.Notes.InsertOneAsync(note);
+
+            if (note.FolderId != null)
+            {
+                SharedService accessService = new SharedService();
+                IEnumerable<SharedFolder> accessFolders = await accessService.GetAvailableFoldersByFolderId(note.FolderId);
+
+                foreach (SharedFolder accessFolder in accessFolders)
+                {
+                    await accessService.CreateNewNoteAccess(accessFolder.UserId, note.Id, accessFolder.Role);
+                }
+>>>>>>> Stashed changes
             }
         }
         public async Task<Note> GetNote(string id)
         {
-            return await Notes.Find(new BsonDocument("_id", new ObjectId(id))).FirstOrDefaultAsync();
+            return await DatabaseData.Notes.Find(new BsonDocument("_id", new ObjectId(id))).FirstOrDefaultAsync();
         }
         public async Task<IEnumerable<Note>> GetAllUserNotes(string userId)
         {
@@ -42,7 +52,7 @@ namespace JustNote.Serivces
                 filter = filter & builder.Eq("UserId", new ObjectId(userId));
             }
 
-            return await Notes.Find(filter).ToListAsync();
+            return await DatabaseData.Notes.Find(filter).ToListAsync();
         }
         public async Task<IEnumerable<Note>> GetAllNotesFromFolder(string parentFolderId)
         {
@@ -54,7 +64,7 @@ namespace JustNote.Serivces
                 filter = filter & builder.Eq("FolderId", new ObjectId(parentFolderId));
             }
 
-            return await Notes.Find(filter).ToListAsync();
+            return await DatabaseData.Notes.Find(filter).ToListAsync();
         }
         public async Task<IEnumerable<Note>> GetNoteBySearchString(string searchString)
         {
@@ -75,11 +85,11 @@ namespace JustNote.Serivces
             note.NoteDate = DateTime.Now;
             note.FolderId = GetNote(noteId).GetAwaiter().GetResult().FolderId;
 
-            await Notes.ReplaceOneAsync(new BsonDocument("_id", new ObjectId(noteId)), note);
+            await DatabaseData.Notes.ReplaceOneAsync(new BsonDocument("_id", new ObjectId(noteId)), note);
         }
         public async Task DeleteNote(string noteId)
         {
-            await Notes.DeleteOneAsync(new BsonDocument("_id", new ObjectId(noteId)));
+            await DatabaseData.Notes.DeleteOneAsync(new BsonDocument("_id", new ObjectId(noteId)));
         }
     }
 }

@@ -16,7 +16,7 @@ namespace JustNote.Controllers
         private string hashKey;
         private FolderService folderData = new FolderService();
         private NoteService note = new NoteService();
-        private AccessService access = new AccessService();
+        private SharedService access = new SharedService();
         
         [HttpGet]
         public IActionResult GetItems(string token)

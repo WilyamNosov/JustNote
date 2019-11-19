@@ -9,12 +9,15 @@ using MongoDB.Driver;
 
 namespace JustNote.Serivces
 {
-    public class UserService : DatabaseData
+    public class UserService
     {
+<<<<<<< Updated upstream
         public UserService() : base()
         {
 
         }
+=======
+>>>>>>> Stashed changes
         public async Task<bool> CreateUser(Registration newUser, string hashKey)
         {
             User generateUser = new User()
@@ -28,7 +31,7 @@ namespace JustNote.Serivces
             };
             if (CheckUserInDB(generateUser))
             {
-                await Users.InsertOneAsync(generateUser);
+                await DatabaseData.Users.InsertOneAsync(generateUser);
                 return true;
             }
             return false;
@@ -41,8 +44,17 @@ namespace JustNote.Serivces
                     Builders<User>.Filter.Eq("HashKey", hashkey)
                 });
 
+<<<<<<< Updated upstream
             if (await Users.Find(filterByName).FirstOrDefaultAsync() != null)
                 return await Users.Find(filterByName).FirstOrDefaultAsync();
+=======
+            if (await DatabaseData.Users.Find(filter).FirstOrDefaultAsync() != null)
+            {
+                return await DatabaseData.Users.Find(filter).FirstOrDefaultAsync();
+            }
+
+            paramList.Remove("UserName");
+>>>>>>> Stashed changes
 
             FilterDefinition<User> filterByEmail = Builders<User>.Filter.And(
                 new List<FilterDefinition<User>> {
@@ -50,8 +62,17 @@ namespace JustNote.Serivces
                     Builders<User>.Filter.Eq("HashKey", hashkey)
                 });
 
+<<<<<<< Updated upstream
             if (await Users.Find(filterByEmail).FirstOrDefaultAsync() != null)
                 return await Users.Find(filterByEmail).FirstOrDefaultAsync();
+=======
+            if (await DatabaseData.Users.Find(filter).FirstOrDefaultAsync() != null)
+            {
+                return await DatabaseData.Users.Find(filter).FirstOrDefaultAsync();
+            }
+
+            paramList.Remove("Email");
+>>>>>>> Stashed changes
 
             FilterDefinition<User> filterByNumber = Builders<User>.Filter.And(
                 new List<FilterDefinition<User>> {
@@ -59,8 +80,15 @@ namespace JustNote.Serivces
                     Builders<User>.Filter.Eq("HashKey", hashkey)
                 });
 
+<<<<<<< Updated upstream
             if (await Users.Find(filterByNumber).FirstOrDefaultAsync() != null)
                 return await Users.Find(filterByNumber).FirstOrDefaultAsync();
+=======
+            if (await DatabaseData.Users.Find(filter).FirstOrDefaultAsync() != null)
+            {
+                return await DatabaseData.Users.Find(filter).FirstOrDefaultAsync();
+            }
+>>>>>>> Stashed changes
 
             return null;
         }
@@ -68,8 +96,15 @@ namespace JustNote.Serivces
         {
             FilterDefinition<User> filterByEmail = Builders<User>.Filter.Eq("Email", userEmail);
 
+<<<<<<< Updated upstream
             if (await Users.Find(filterByEmail).FirstOrDefaultAsync() != null)
                 return await Users.Find(filterByEmail).FirstOrDefaultAsync();
+=======
+            if (await DatabaseData.Users.Find(filter).FirstOrDefaultAsync() != null)
+            {
+                return await DatabaseData.Users.Find(filter).FirstOrDefaultAsync();
+            }
+>>>>>>> Stashed changes
 
             return null;
         }
@@ -80,12 +115,29 @@ namespace JustNote.Serivces
 
             foreach (User user in users)
             {
+<<<<<<< Updated upstream
                 if (newUser.UserName == user.UserName || newUser.Email == user.Email || newUser.PhoneNumber == user.PhoneNumber)
+=======
+                if (newUser.UserName == user.UserName || newUser.Email == user.Email)//|| newUser.PhoneNumber == user.PhoneNumber)
+>>>>>>> Stashed changes
                     return false;
             }
-            
+
             return true;
         }
+<<<<<<< Updated upstream
         private async Task<IEnumerable<User>> GetAllUsers() => await Users.Find(new BsonDocument()).ToListAsync();
+=======
+
+        public async Task UpdateUser(User user)
+        {
+            await DatabaseData.Users.ReplaceOneAsync(new BsonDocument("_id", new ObjectId(user.Id)), user);
+        }
+
+        private async Task<IEnumerable<User>> GetAllUsers()
+        {
+            return await DatabaseData.Users.Find(new BsonDocument()).ToListAsync();
+        }
+>>>>>>> Stashed changes
     }
 }

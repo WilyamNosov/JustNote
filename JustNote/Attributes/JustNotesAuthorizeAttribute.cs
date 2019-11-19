@@ -29,7 +29,7 @@ namespace JustNote.Attributes
         {
             context.HttpContext.Request.Query.TryGetValue("token", out token);
             var hasClaim = new TokenManagerService().ValidateToken(token, out outOne, out outTwo);
-            context.HttpContext.User = new UserService().GetUser(outOne, outTwo).GetAwaiter().GetResult();
+            //context.HttpContext.User = new UserService().GetUser(outOne, outTwo).GetAwaiter().GetResult();
             if (!hasClaim)
             {
                 context.Result = new UnauthorizedResult();

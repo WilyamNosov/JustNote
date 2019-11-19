@@ -25,7 +25,6 @@ namespace JustNote.Serivces
                     new Claim (ClaimTypes.Name, username),
                     new Claim (ClaimTypes.Hash, hashkey)
                 }),
-                Expires = DateTime.UtcNow.AddMinutes(120),
                 SigningCredentials = new SigningCredentials(securityKey,
                 SecurityAlgorithms.HmacSha256Signature)
             };
@@ -61,30 +60,12 @@ namespace JustNote.Serivces
 
                 return true;
 
-            } catch
+            }
+            catch
             {
                 return false;
             }
         }
-        ///*protected */public Task<IPrincipal> AuthenticateJwtToken(string token)
-        //{
-        //    string username;
-
-        //    if (ValidateToken(token, out username))
-        //    {
-        //        List<Claim> claims = new List<Claim>
-        //        {
-        //            new Claim(ClaimTypes.Name, username)
-        //        };
-
-        //        ClaimsIdentity identity = new ClaimsIdentity(claims, "Jwt");
-        //        IPrincipal user = new ClaimsPrincipal(identity);
-
-        //        return Task.FromResult(user);
-        //    }
-
-        //    return Task.FromResult<IPrincipal>(null);
-        //}
         public static ClaimsPrincipal GetPrincipal(string token)
         {
             try
@@ -115,8 +96,6 @@ namespace JustNote.Serivces
                 return null;
             }
         }
-<<<<<<< Updated upstream
-=======
 
         public string GenerateConfirmEmailToken(string userEmail)
         {
@@ -138,7 +117,7 @@ namespace JustNote.Serivces
         public bool ValidateConfirmEmailToken(string token, out string email)
         {
             email = null;
-            
+
             ClaimsPrincipal simplePrinciple = GetPrincipal(token);
 
             try
@@ -152,9 +131,9 @@ namespace JustNote.Serivces
                     return false;
 
                 Claim emailClaim = identity.FindFirst(ClaimTypes.Email);
-                
+
                 email = emailClaim?.Value;
-                
+
                 if (string.IsNullOrEmpty(email))
                     return false;
 
@@ -165,11 +144,5 @@ namespace JustNote.Serivces
                 return false;
             }
         }
-
-        public static implicit operator bool(TokenManagerService v)
-        {
-            throw new NotImplementedException();
-        }
->>>>>>> Stashed changes
     }
 }

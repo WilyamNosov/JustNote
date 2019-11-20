@@ -14,9 +14,13 @@ namespace JustNotes.Controllers
     [ApiController]
     public class NoteController : Controller
     {
-        private string userName;
-        private string hashKey;
         private NoteService noteData = new NoteService();
+        private TokenManagerService _tokenManagerService;
+
+        public NoteController(TokenManagerService tokenManagerService)
+        {
+            _tokenManagerService = tokenManagerService;
+        }
 
         [JustNotesAuthorize]
         [HttpGet("{id}")]
@@ -25,65 +29,46 @@ namespace JustNotes.Controllers
             return await noteData.GetNote(id);
         }
 
+        [JustNotesAuthorize]
         [HttpPost]
         public async Task<IActionResult> Post(string token, [FromBody] Note note, string folderId = null)
         {
-            var tokenManagerService = new TokenManagerService();
-            if (tokenManagerService.ValidateToken(token, out userName, out hashKey))
-            {
-                var user = await new UserService().GetUser(userName, hashKey);
-                note.NoteDate = DateTime.Now;
-                note.UserId = user.Id;
-                note.FolderId = folderId;
+            var user = await new UserService().GetUser(_tokenManagerService.UserName, _tokenManagerService.UserHashKey);
+            note.NoteDate = DateTime.Now;
+            note.UserId = user.Id;
+            note.FolderId = folderId;
 
-                await noteData.CreateNote(note);
-                return Ok();
-            }
-
-            return Unauthorized();
+            await noteData.CreateNote(note);
+            return Ok();
         }
+
+        [JustNotesAuthorize]
         [HttpPost("{id}")]
         public async Task<IActionResult> Post(string id, string token, [FromBody] Note note)
         {
-            var tokenManagerService = new TokenManagerService();
-            if (tokenManagerService.ValidateToken(token, out userName, out hashKey))
-            {
-                var user = await new UserService().GetUser(userName, hashKey);
-                note.NoteDate = DateTime.Now;
-                note.UserId = user.Id;
-                note.FolderId = id;
+            var user = await new UserService().GetUser(_tokenManagerService.UserName, _tokenManagerService.UserHashKey);
+            note.NoteDate = DateTime.Now;
+            note.UserId = user.Id;
+            note.FolderId = id;
 
-                await noteData.CreateNote(note);
-                return Ok();
-            }
-
-            return Unauthorized();
+            await noteData.CreateNote(note);
+            return Ok();
         }
 
+        [JustNotesAuthorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(string token, string id, [FromBody] Note note)
         {
-            var tokenManagerService = new TokenManagerService();
-            if (tokenManagerService.ValidateToken(token, out userName, out hashKey))
-            {
-                await noteData.UpdateNote(id, note);
-                return Ok();
-            }
-
-            return Unauthorized();
+            await noteData.UpdateNote(id, note);
+            return Ok();
         }
 
+        [JustNotesAuthorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string token, string id)
         {
-            var tokenManagerService = new TokenManagerService();
-            if (tokenManagerService.ValidateToken(token, out userName, out hashKey))
-            {
-                await noteData.DeleteNote(id);
-                return Ok();
-            }
-
-            return Unauthorized();
+            await noteData.DeleteNote(id);
+            return Ok();
         }
     }
 }

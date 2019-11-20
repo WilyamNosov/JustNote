@@ -22,14 +22,18 @@ namespace JustNote.Attributes
     public class JustNotesAuthorizeFilter : IAuthorizationFilter
     {
         private StringValues token;
-        string outOne = "";
-        string outTwo = "";
+        private TokenManagerService _tokenManagerService;
+
+        public JustNotesAuthorizeFilter(TokenManagerService tokenManagerService)
+        {
+            _tokenManagerService = tokenManagerService;
+        }
 
         public void OnAuthorization(AuthorizationFilterContext context)
         {
             context.HttpContext.Request.Query.TryGetValue("token", out token);
-            var hasClaim = new TokenManagerService().ValidateToken(token, out outOne, out outTwo);
-            //context.HttpContext.User = new UserService().GetUser(outOne, outTwo).GetAwaiter().GetResult();
+            var hasClaim = _tokenManagerService.ValidateToken(token);
+            
             if (!hasClaim)
             {
                 context.Result = new UnauthorizedResult();

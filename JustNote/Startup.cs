@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using JustNote.Attributes;
+using JustNote.Serivces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -41,6 +43,8 @@ namespace JustNote
                         .AllowAnyMethod();
                 });
             });
+
+            services.AddSingleton<TokenManagerService>();
 
             services.AddAWSService<Amazon.S3.IAmazonS3>();
             services.AddSwaggerGen(c =>

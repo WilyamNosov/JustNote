@@ -13,11 +13,13 @@ namespace JustNote.Serivces
 {
     public class TokenManagerService
     {
-        private static string Secret = "XCAP05H6LoKvbRRa/QkqLNMI7cOHguaRyHzyg7n5qEkGjQmtBhz4SzYh4Fqwjyi3KJHlSXKPwVu2+bXr6CtpgQ==";
+        private static string _secret = "XCAP05H6LoKvbRRa/QkqLNMI7cOHguaRyHzyg7n5qEkGjQmtBhz4SzYh4Fqwjyi3KJHlSXKPwVu2+bXr6CtpgQ==";
+        public string UserName { get; set; }
+        public string UserHashKey { get; set; }
 
         public string GenerateToken(string username, string hashkey)
         {
-            byte[] key = Convert.FromBase64String(Secret);
+            byte[] key = Convert.FromBase64String(_secret);
             SymmetricSecurityKey securityKey = new SymmetricSecurityKey(key);
             SecurityTokenDescriptor descriptor = new SecurityTokenDescriptor
             {
@@ -32,10 +34,10 @@ namespace JustNote.Serivces
             JwtSecurityToken token = handler.CreateJwtSecurityToken(descriptor);
             return handler.WriteToken(token);
         }
-        public bool ValidateToken(string token, out string username, out string hashkey)
+        public bool ValidateToken(string token/*, out string username, out string hashkey*/)
         {
-            username = null;
-            hashkey = null;
+            UserName = null;
+            UserHashKey = null;
 
             ClaimsPrincipal simplePrinciple = GetPrincipal(token);
 
@@ -52,10 +54,10 @@ namespace JustNote.Serivces
                 Claim usernameClaim = identity.FindFirst(ClaimTypes.Name);
                 Claim hashkeyClaim = identity.FindFirst(ClaimTypes.Hash);
 
-                username = usernameClaim?.Value;
-                hashkey = hashkeyClaim?.Value;
+                UserName = usernameClaim?.Value;
+                UserHashKey = hashkeyClaim?.Value;
 
-                if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(hashkey))
+                if (string.IsNullOrEmpty(UserName) || string.IsNullOrEmpty(UserHashKey))
                     return false;
 
                 return true;
@@ -76,7 +78,7 @@ namespace JustNote.Serivces
                 if (jwtToken == null)
                     return null;
 
-                byte[] symmetricKey = Convert.FromBase64String(Secret);
+                byte[] symmetricKey = Convert.FromBase64String(_secret);
 
                 TokenValidationParameters validationParameters = new TokenValidationParameters()
                 {
@@ -99,7 +101,7 @@ namespace JustNote.Serivces
 
         public string GenerateConfirmEmailToken(string userEmail)
         {
-            byte[] key = Convert.FromBase64String(Secret);
+            byte[] key = Convert.FromBase64String(_secret);
             SymmetricSecurityKey securityKey = new SymmetricSecurityKey(key);
             SecurityTokenDescriptor descriptor = new SecurityTokenDescriptor
             {

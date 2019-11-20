@@ -14,31 +14,31 @@ namespace JustNotes.Controllers
     [ApiController]
     public class NoteController : Controller
     {
-        private NoteService noteData = new NoteService();
+        private IDatabaseItemService<Note> _noteService = new NoteService();
         private TokenManagerService _tokenManagerService;
 
-        public NoteController(TokenManagerService tokenManagerService)
+        public NoteController(TokenManagerService tokenManagerService, IDatabaseItemService<Note> noteService)
         {
             _tokenManagerService = tokenManagerService;
+            _noteService = noteService;
         }
 
         [JustNotesAuthorize]
         [HttpGet("{id}")]
         public async Task<Note> Get(string id, string token)
         {
-            return await noteData.GetNote(id);
+            return await _noteService.Get(id);
         }
 
         [JustNotesAuthorize]
         [HttpPost]
         public async Task<IActionResult> Post(string token, [FromBody] Note note, string folderId = null)
         {
-            var user = await new UserService().GetUser(_tokenManagerService.UserName, _tokenManagerService.UserHashKey);
             note.NoteDate = DateTime.Now;
-            note.UserId = user.Id;
+            note.UserId = _tokenManagerService.User.Id;
             note.FolderId = folderId;
 
-            await noteData.CreateNote(note);
+            await _noteService.Create(note);
             return Ok();
         }
 
@@ -46,12 +46,11 @@ namespace JustNotes.Controllers
         [HttpPost("{id}")]
         public async Task<IActionResult> Post(string id, string token, [FromBody] Note note)
         {
-            var user = await new UserService().GetUser(_tokenManagerService.UserName, _tokenManagerService.UserHashKey);
             note.NoteDate = DateTime.Now;
-            note.UserId = user.Id;
+            note.UserId = _tokenManagerService.User.Id;
             note.FolderId = id;
 
-            await noteData.CreateNote(note);
+            await _noteService.Create(note);
             return Ok();
         }
 
@@ -59,7 +58,7 @@ namespace JustNotes.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(string token, string id, [FromBody] Note note)
         {
-            await noteData.UpdateNote(id, note);
+            await _noteService.Update(id, note);
             return Ok();
         }
 
@@ -67,7 +66,7 @@ namespace JustNotes.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string token, string id)
         {
-            await noteData.DeleteNote(id);
+            await _noteService.Delete(id);
             return Ok();
         }
     }

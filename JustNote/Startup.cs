@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using JustNote.Attributes;
+using JustNote.Models;
 using JustNote.Serivces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -45,6 +46,8 @@ namespace JustNote
             });
 
             services.AddSingleton<TokenManagerService>();
+            services.AddScoped<IDatabaseItemService<Note>, NoteService>();
+            services.AddScoped<IDatabaseItemService<Folder>, FolderService>();
 
             services.AddAWSService<Amazon.S3.IAmazonS3>();
             services.AddSwaggerGen(c =>

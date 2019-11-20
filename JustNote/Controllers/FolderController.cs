@@ -7,6 +7,7 @@ using JustNote.Models;
 using JustNote.Serivces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
 
 namespace JustNotes.Controllers
 {
@@ -16,23 +17,23 @@ namespace JustNotes.Controllers
     {
 
         private TokenManagerService _tokenManagerService;
-        private FolderService folderData = new FolderService();
+        private IDatabaseItemService<Folder> _folderService;
+        private IDatabaseItemService<Note> _noteService;
 
-        public FolderController(TokenManagerService tokenManagerService)
+        public FolderController(TokenManagerService tokenManagerService, IDatabaseItemService<Folder> folderService, IDatabaseItemService<Note> noteService)
         {
             _tokenManagerService = tokenManagerService;
+            _folderService = folderService;
+            _noteService = noteService;
         }
 
         [JustNotesAuthorize]
         [HttpGet]
         public async Task<IActionResult> Get(string token)
         {
-            var notedata = new NoteService();
-            var user = await new UserService().GetUser(_tokenManagerService.UserName, _tokenManagerService.UserHashKey);
-
-            IEnumerable<Object> folders = await folderData.GetAllUserFolders(user.Id);
-            IEnumerable<Object> notes = await notedata.GetAllUserNotes(user.Id);
-            IEnumerable<Object> result = folders.Concat(notes);
+            var folders = Json(await _folderService.GetAllItems(_tokenManagerService.User.Id));
+            var notes = Json(await _noteService.GetAllItems(_tokenManagerService.User.Id));
+            var result = new List<Object>() { folders.Value, notes.Value };
 
             return Ok(result);
         }
@@ -41,27 +42,24 @@ namespace JustNotes.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(string id, string token)
         {
-            var noteData = new NoteService();
-            var parentFolder = await folderData.GetFolder(id);
+            var parentFolder = await _folderService.Get(id);
 
-            IEnumerable<Object> folders = await folderData.GetAllChildFolder(id);
-            IEnumerable<Object> notes = await noteData.GetAllNotesFromFolder(id);
-            IEnumerable<Object> result = folders.Concat(notes);
-            IEnumerable<Object> x = new List<Object>() { new TimedModel() { PreviouseParent = parentFolder.ParentFolderId } };
+            var folders = Json(await _folderService.GetAllItemsFromFolder(id));
+            var notes = Json(await _noteService.GetAllItemsFromFolder(id));
+            var result = new List<Object>() { folders.Value, notes.Value, new TimedModel() { PreviouseParent = parentFolder.ParentFolderId } };
 
-            return Ok(result.Concat(x));
+            return Ok(result);
         }
 
         [JustNotesAuthorize]
         [HttpPost]
         public async Task<IActionResult> Post(string token, [FromBody] Folder folder)
         {
-            var user = await new UserService().GetUser(_tokenManagerService.UserName, _tokenManagerService.UserHashKey);
             folder.FolderDate = DateTime.Now;
-            folder.UserId = user.Id;
+            folder.UserId = _tokenManagerService.User.Id;
             folder.ParentFolderId = null;
 
-            await folderData.CreateFolder(folder);
+            await _folderService.Create(folder);
             return Ok();
         }
 
@@ -69,12 +67,11 @@ namespace JustNotes.Controllers
         [HttpPost("{id}")]
         public async Task<IActionResult> Post(string id, string token, [FromBody] Folder folder)
         {
-            var user = await new UserService().GetUser(_tokenManagerService.UserName, _tokenManagerService.UserHashKey);
             folder.FolderDate = DateTime.Now;
-            folder.UserId = user.Id;
+            folder.UserId = _tokenManagerService.User.Id;
             folder.ParentFolderId = id;
 
-            await folderData.CreateFolder(folder);
+            await _folderService.Create(folder);
             return Ok();
         }
 
@@ -82,7 +79,7 @@ namespace JustNotes.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(string id, string token, [FromBody] Folder folder)
         {
-            await folderData.UpdateFolder(id, folder);
+            await _folderService.Update(id, folder);
             return Ok();
         }
 
@@ -90,7 +87,7 @@ namespace JustNotes.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id, string token)
         {
-            await folderData.DeleteFolder(id);
+            await _folderService.Delete(id);
             return Ok();
         }
     }

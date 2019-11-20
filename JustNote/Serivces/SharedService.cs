@@ -19,7 +19,9 @@ namespace JustNote.Serivces
         public async Task<IEnumerable<SharedFolder>> GetAvailableFoldersByFolderId(string folderId)
         {
             if (String.IsNullOrWhiteSpace(folderId))
+            {
                 return null;
+            }
 
             FilterDefinition<SharedFolder> filter = FilterService<SharedFolder>.GetFilterByOneParam("FolderId", new ObjectId(folderId));
 
@@ -33,7 +35,9 @@ namespace JustNote.Serivces
             FilterDefinition<SharedFolder> filter = FilterService<SharedFolder>.GetFilterByTwoParam(paramList, valueList);
 
             if (await DatabaseData.SharedFolders.Find(filter).FirstOrDefaultAsync() != null)
+            {
                 return await DatabaseData.SharedFolders.Find(filter).FirstOrDefaultAsync();
+            }
 
             return null;
         }
@@ -46,21 +50,27 @@ namespace JustNote.Serivces
             FilterDefinition<SharedNote> filter = FilterService<SharedNote>.GetFilterByTwoParam(paramList, valueList);
 
             if (await DatabaseData.SharedNotes.Find(filter).FirstOrDefaultAsync() != null)
+            {
                 return await DatabaseData.SharedNotes.Find(filter).FirstOrDefaultAsync();
+            }
 
             return null;
         }
 
         public async Task CreateNewFolderAccess(string userId, string folderId, string role)
         {
-            IEnumerable<Note> notesInFolder = await new NoteService().GetAllNotesFromFolder(folderId);
-            IEnumerable<Folder> childFolders = await new FolderService().GetAllChildFolder(folderId);
+            IEnumerable<Note> notesInFolder = await NoteService.GetAllItemsFromFolder(folderId);
+            IEnumerable<Folder> childFolders = await FolderService.GetAllItemsFromFolder(folderId);
 
             foreach (Folder folder in childFolders)
+            {
                 await CreateNewFolderAccess(userId, folder.Id, role);
+            }
 
             foreach (Note note in notesInFolder)
+            {
                 await CreateNewNoteAccess(userId, note.Id, role);
+            }
 
             SharedFolder availableFolder = await GetAvailableFolder(folderId, userId);
 
@@ -107,7 +117,9 @@ namespace JustNote.Serivces
         public async Task<IEnumerable<Object>> GetAvailableItems(string userId)
         {
             if (String.IsNullOrWhiteSpace(userId))
+            {
                 return null;
+            }
 
             FilterDefinition<SharedFolder> filterFolder = FilterService<SharedFolder>.GetFilterByOneParam("UserId", new ObjectId(userId));
             FilterDefinition<SharedNote> filterNote = FilterService<SharedNote>.GetFilterByOneParam("UserId", new ObjectId(userId));
@@ -118,11 +130,13 @@ namespace JustNote.Serivces
             List<SharedNote> AvailableNoteIds = await DatabaseData.SharedNotes.Find(filterNote).ToListAsync();
 
             foreach (SharedFolder AvailableFolderId in AvailableFolerIds)
+            {
                 folderIds.Add(AvailableFolderId.FolderId);
+            }
 
             foreach (SharedFolder AvailableFolderId in AvailableFolerIds)
             {
-                Folder folder = FolderService.GetFolder(AvailableFolderId.FolderId).GetAwaiter().GetResult();
+                Folder folder = await FolderService.Get(AvailableFolderId.FolderId);
 
                 if (folder != null && !folderIds.Contains(folder.ParentFolderId))
                 {
@@ -134,11 +148,11 @@ namespace JustNote.Serivces
 
             foreach (SharedNote availableNote in AvailableNoteIds)
             {
-                Note note = NoteService.GetNote(availableNote.NoteId).GetAwaiter().GetResult();
+                Note note = await NoteService.Get(availableNote.NoteId);
 
                 if (note != null && !folderIds.Contains(note.FolderId))
                 {
-                    JObject addToResult = JObject.FromObject(NoteService.GetNote(availableNote.NoteId).GetAwaiter().GetResult());
+                    JObject addToResult = JObject.FromObject(await NoteService.Get(availableNote.NoteId));
                     addToResult.Add("Role", availableNote.Role);
                     result.Add(addToResult);
                 }
@@ -148,8 +162,8 @@ namespace JustNote.Serivces
         }
         public async Task<IEnumerable<Object>> GetAvailableItemsFromFolder(string folderId, string userId)
         {
-            IEnumerable<Folder> folders = FolderService.GetAllChildFolder(folderId).GetAwaiter().GetResult();
-            IEnumerable<Note> notes = NoteService.GetAllNotesFromFolder(folderId).GetAwaiter().GetResult();
+            IEnumerable<Folder> folders = await FolderService.GetAllItemsFromFolder(folderId);
+            IEnumerable<Note> notes = await NoteService.GetAllItemsFromFolder(folderId);
             List<Object> result = new List<Object>();
 
             foreach (Folder folder in folders)

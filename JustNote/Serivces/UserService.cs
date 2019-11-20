@@ -79,6 +79,11 @@ namespace JustNote.Serivces
             return null;
         }
 
+        public async Task UpdateUser(User user)
+        {
+            await DatabaseData.Users.ReplaceOneAsync(new BsonDocument("_id", new ObjectId(user.Id)), user);
+        }
+
         private bool CheckUserInDB(User newUser)
         {
             IEnumerable<User> users = GetAllUsers().GetAwaiter().GetResult();
@@ -90,11 +95,6 @@ namespace JustNote.Serivces
             }
 
             return true;
-        }
-
-        public async Task UpdateUser(User user)
-        {
-            await DatabaseData.Users.ReplaceOneAsync(new BsonDocument("_id", new ObjectId(user.Id)), user);
         }
 
         private async Task<IEnumerable<User>> GetAllUsers()

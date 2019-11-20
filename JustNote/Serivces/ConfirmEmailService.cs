@@ -39,17 +39,14 @@ namespace JustNote.Serivces
             if (new TokenManagerService().ValidateConfirmEmailToken(token, out email))
             {
                 User user = await userService.GetUserByEmail(email);
+                
                 if (user.ConfirmedEmail != true)
                 {
                     user.ConfirmedEmail = true;
-
                     await userService.UpdateUser(user);
-                    throw new Exception($"https://testawslambdas3bucket.s3.us-west-2.amazonaws.com/index.html");
                 }
-                else
-                {
-                    throw new Exception($"https://testawslambdas3bucket.s3.us-west-2.amazonaws.com/index.html");
-                }
+
+                throw new Exception($"https://testawslambdas3bucket.s3.us-west-2.amazonaws.com/index.html");
             }
         }
     }

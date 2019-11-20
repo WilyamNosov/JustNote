@@ -16,6 +16,7 @@ namespace JustNote.Serivces
         private static string _secret = "XCAP05H6LoKvbRRa/QkqLNMI7cOHguaRyHzyg7n5qEkGjQmtBhz4SzYh4Fqwjyi3KJHlSXKPwVu2+bXr6CtpgQ==";
         public string UserName { get; set; }
         public string UserHashKey { get; set; }
+        public User User { get; set; }
 
         public string GenerateToken(string username, string hashkey)
         {
@@ -34,7 +35,7 @@ namespace JustNote.Serivces
             JwtSecurityToken token = handler.CreateJwtSecurityToken(descriptor);
             return handler.WriteToken(token);
         }
-        public bool ValidateToken(string token/*, out string username, out string hashkey*/)
+        public bool ValidateToken(string token)
         {
             UserName = null;
             UserHashKey = null;
@@ -54,8 +55,7 @@ namespace JustNote.Serivces
                 Claim usernameClaim = identity.FindFirst(ClaimTypes.Name);
                 Claim hashkeyClaim = identity.FindFirst(ClaimTypes.Hash);
 
-                UserName = usernameClaim?.Value;
-                UserHashKey = hashkeyClaim?.Value;
+                User = new UserService().GetUser(usernameClaim?.Value, hashkeyClaim?.Value).GetAwaiter().GetResult();
 
                 if (string.IsNullOrEmpty(UserName) || string.IsNullOrEmpty(UserHashKey))
                     return false;
@@ -103,6 +103,7 @@ namespace JustNote.Serivces
         {
             byte[] key = Convert.FromBase64String(_secret);
             SymmetricSecurityKey securityKey = new SymmetricSecurityKey(key);
+            
             SecurityTokenDescriptor descriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[] {
@@ -112,6 +113,7 @@ namespace JustNote.Serivces
                 SigningCredentials = new SigningCredentials(securityKey,
                 SecurityAlgorithms.HmacSha256Signature)
             };
+
             JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
             JwtSecurityToken token = handler.CreateJwtSecurityToken(descriptor);
             return handler.WriteToken(token);

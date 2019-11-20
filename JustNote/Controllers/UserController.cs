@@ -11,8 +11,8 @@ namespace JustNotes.Controllers
     [ApiController]
     public class UserController : Controller
     {
-        private string userName;
-        private string userToken;
+        //private string userName;
+        //private string userToken;
         [HttpPut("{id}")]
         public IActionResult UpdateUserData(string id, [FromBody]Object userData)
         {

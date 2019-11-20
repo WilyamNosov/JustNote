@@ -49,8 +49,8 @@ namespace JustNotes.Controllers
                 var user = await new UserService().GetUser(_tokenManagerService.UserName, _tokenManagerService.UserHashKey);
 
                 var result = await access.GetAvailableItemsFromFolder(id, user.Id);
-                var parentFolder = await folderData.GetFolder(id);
-                var previusparent = new List<Object>() { new TimedModel() { PreviouseParent = parentFolder.ParentFolderId } };
+                var parentFolder = await folderData.Get(id);
+                var previusparent = new List<Object>() { new TimedModel() { PreviouseParent = parentFolder.ParentFolderId} };
 
                 return Ok(result.Concat(previusparent));
             }
@@ -68,13 +68,13 @@ namespace JustNotes.Controllers
             {
                 User user = await new UserService().GetUser(_tokenManagerService.UserName, _tokenManagerService.UserHashKey);
 
-                var parentFolder = await folderData.GetFolder(id);
+                var parentFolder = await folderData.Get(id);
 
                 folder.FolderDate = DateTime.Now;
                 folder.UserId = parentFolder.UserId;
                 folder.ParentFolderId = id;
 
-                await folderData.CreateFolder(folder);
+                await folderData.Create(folder);
                 return Ok();
             }
             catch
@@ -110,13 +110,13 @@ namespace JustNotes.Controllers
             {
                 User user = new UserService().GetUser(_tokenManagerService.UserName, _tokenManagerService.UserHashKey).GetAwaiter().GetResult();
 
-                var parentFolder = await folderData.GetFolder(id);
+                var parentFolder = await folderData.Get(id);
 
                 note.NoteDate = DateTime.Now;
                 note.UserId = parentFolder.UserId;
                 note.FolderId = id;
 
-                await noteData.CreateNote(note);
+                await noteData.Create(note);
                 return Ok();
             }
             catch

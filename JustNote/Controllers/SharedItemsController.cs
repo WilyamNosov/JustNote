@@ -15,13 +15,15 @@ namespace JustNotes.Controllers
     public class SharedItemsController : Controller
     {
         private TokenManagerService _tokenManagerService;
-        private FolderService folderData = new FolderService();
-        private NoteService noteData = new NoteService();
-        private SharedService access = new SharedService();
+        private IDatabaseItemService<Folder> _folderService;
+        private IDatabaseItemService<Note> _noteService;
+        private SharedService _sharedService = new SharedService();
 
-        public SharedItemsController(TokenManagerService tokenManagerService)
+        public SharedItemsController(TokenManagerService tokenManagerService, IDatabaseItemService<Folder> folderService, IDatabaseItemService<Note> noteService)
         {
             _tokenManagerService = tokenManagerService;
+            _folderService = folderService;
+            _noteService = noteService;
         }
 
         [JustNotesAuthorize]
@@ -31,7 +33,7 @@ namespace JustNotes.Controllers
             try
             {
                 var user = await new UserService().GetUser(_tokenManagerService.UserName, _tokenManagerService.UserHashKey);
-                var result = await access.GetAvailableItems(user.Id);
+                var result = await _sharedService.GetSharedItems(user.Id);
                 return Ok(result);
             }
             catch
@@ -48,8 +50,8 @@ namespace JustNotes.Controllers
             {
                 var user = await new UserService().GetUser(_tokenManagerService.UserName, _tokenManagerService.UserHashKey);
 
-                var result = await access.GetAvailableItemsFromFolder(id, user.Id);
-                var parentFolder = await folderData.Get(id);
+                var result = await _sharedService.GetAvailableItemsFromFolder(id, user.Id);
+                var parentFolder = await _folderService.Get(id);
                 var previusparent = new List<Object>() { new TimedModel() { PreviouseParent = parentFolder.ParentFolderId} };
 
                 return Ok(result.Concat(previusparent));
@@ -68,13 +70,13 @@ namespace JustNotes.Controllers
             {
                 User user = await new UserService().GetUser(_tokenManagerService.UserName, _tokenManagerService.UserHashKey);
 
-                var parentFolder = await folderData.Get(id);
+                var parentFolder = await _folderService.Get(id);
 
                 folder.FolderDate = DateTime.Now;
                 folder.UserId = parentFolder.UserId;
                 folder.ParentFolderId = id;
 
-                await folderData.Create(folder);
+                await _folderService.Create(folder);
                 return Ok();
             }
             catch
@@ -93,7 +95,7 @@ namespace JustNotes.Controllers
                 string role = JObject.Parse(inputValue.ToString()).Value<String>("Role");
                 string userId = new UserService().GetUserByEmail(userEmail).GetAwaiter().GetResult().Id;
 
-                await access.CreateNewFolderAccess(userId, id, role);
+                await _sharedService.CreateNewFolderAccess(userId, id, role);
                 return Ok();
             }
             catch
@@ -110,13 +112,13 @@ namespace JustNotes.Controllers
             {
                 User user = new UserService().GetUser(_tokenManagerService.UserName, _tokenManagerService.UserHashKey).GetAwaiter().GetResult();
 
-                var parentFolder = await folderData.Get(id);
+                var parentFolder = await _folderService.Get(id);
 
                 note.NoteDate = DateTime.Now;
                 note.UserId = parentFolder.UserId;
                 note.FolderId = id;
 
-                await noteData.Create(note);
+                await _noteService.Create(note);
                 return Ok();
             }
             catch
@@ -135,7 +137,7 @@ namespace JustNotes.Controllers
                 var role = JObject.Parse(inputValue.ToString()).Value<String>("Role");
                 var user = await new UserService().GetUserByEmail(userEmail);
 
-                await access.CreateNewNoteAccess(user.Id, id, role);
+                await _sharedService.CreateNewNoteAccess(user.Id, id, role);
                 return Ok();
             }
             catch

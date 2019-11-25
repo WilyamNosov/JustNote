@@ -15,19 +15,19 @@ namespace JustNote.Serivces
     public class NoteService : IDatabaseItemService<Note>
     {
         private IDatabaseItemService<SharedNote> _sharedNotesService;
-        private IDatabaseItemService<SharedNote> _sharedFolersService;
+        private IDatabaseItemService<SharedFolder> _sharedFolersService;
 
-        public NoteService(IDatabaseItemService<SharedNote> sharedNotesService, IDatabaseItemService<SharedNote> sharedFolersService)
+        public NoteService(IDatabaseItemService<SharedNote> sharedNotesService, IDatabaseItemService<SharedFolder> sharedFolersService)
         {
             _sharedNotesService = sharedNotesService;
-            _sharedNotesService = sharedFolersService;
+            _sharedFolersService = sharedFolersService;
         }
 
         public async Task Create(Note item)
         {
             await DatabaseData.Notes.InsertOneAsync(item);
 
-            var sharedFolders = await _sharedNotesService.GetAllItems(item.FolderId);
+            var sharedFolders = await _sharedFolersService.GetAllItems(item.FolderId);
             var sharedNotes = new List<SharedNote>();
 
             foreach (var sharedFolder in sharedFolders )

@@ -14,7 +14,7 @@ namespace JustNotes.Controllers
     [ApiController]
     public class NoteController : Controller
     {
-        private IDatabaseItemService<Note> _noteService = new NoteService();
+        private IDatabaseItemService<Note> _noteService;
         private TokenManagerService _tokenManagerService;
 
         public NoteController(TokenManagerService tokenManagerService, IDatabaseItemService<Note> noteService)

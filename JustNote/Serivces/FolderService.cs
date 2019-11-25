@@ -16,24 +16,15 @@ namespace JustNote.Serivces
         public async Task Create(Folder item)
         {
             await DatabaseData.Folders.InsertOneAsync(item);
-
-            SharedService sharedService = new SharedService();
-            IEnumerable<SharedFolder> sharedFolders = await sharedService.GetAvailableFoldersByFolderId(item.ParentFolderId);
-
-            if (item.ParentFolderId != null)
-            {
-                foreach (SharedFolder sharedFolder in sharedFolders)
-                {
-                    await sharedService.CreateNewFolderAccess(sharedFolder.UserId, item.Id, sharedFolder.Role);
-                }
-            }
         }
 
         public async Task<Folder> Get(string id)
         {
             if (!String.IsNullOrWhiteSpace(id))
             {
-                return await DatabaseData.Folders.Find(new BsonDocument("_id", new ObjectId(id))).FirstOrDefaultAsync();
+                var result = await DatabaseData.Folders.Find(new BsonDocument("_id", new ObjectId(id))).FirstOrDefaultAsync();
+
+                return result;
             }
 
             return null;
@@ -47,8 +38,9 @@ namespace JustNote.Serivces
             }
 
             FilterDefinition<Folder> filter = FilterService<Folder>.GetFilterByOneParam("UserId", new ObjectId(id));
+            var result = await DatabaseData.Folders.Find(filter).ToListAsync();
 
-            return await DatabaseData.Folders.Find(filter).ToListAsync();
+            return result;
         }
 
         public async Task<IEnumerable<Folder>> GetAllItemsFromFolder(string id)
@@ -59,8 +51,15 @@ namespace JustNote.Serivces
             }
 
             FilterDefinition<Folder> filter = FilterService<Folder>.GetFilterByOneParam("ParentFolderId", new ObjectId(id));
+            var result = await DatabaseData.Folders.Find(filter).ToListAsync();
 
-            return await DatabaseData.Folders.Find(filter).ToListAsync();
+            return result;
+        }
+        public async Task<IEnumerable<Folder>> GetAllItemsFromDatabase()
+        {
+            var result = await DatabaseData.Folders.Find(new BsonDocument()).ToListAsync(); 
+
+            return result;
         }
 
         public async Task Update(string id, Folder item)
@@ -70,28 +69,13 @@ namespace JustNote.Serivces
             item.Id = id;
             item.UserId = oldFolder.UserId;
             item.FolderDate = DateTime.Now;
-            item.ParentFolderId = oldFolder.ParentFolderId;
 
             await DatabaseData.Folders.ReplaceOneAsync(new BsonDocument("_id", new ObjectId(item.Id)), item);
         }
 
         public async Task Delete(string id)
         {
-            NoteService noteService = new NoteService();
-
-            IEnumerable<Note> notesInFolder = await new NoteService().GetAllItemsFromFolder(id);
-            IEnumerable<Folder> childFolders = await GetAllItemsFromFolder(id);
-
-            foreach (Note note in notesInFolder)
-            {
-                await noteService.Delete(note.Id);
-            }
-
-            foreach (Folder childFolder in childFolders)
-            {
-                await Delete(childFolder.Id);
-            }
-
+            await DatabaseData.Notes.DeleteManyAsync(new BsonDocument("FolderId", new ObjectId(id)));
             await DatabaseData.Folders.DeleteOneAsync(new BsonDocument("_id", new ObjectId(id)));
         }
     }

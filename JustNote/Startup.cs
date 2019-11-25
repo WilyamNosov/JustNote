@@ -48,6 +48,8 @@ namespace JustNote
             services.AddSingleton<TokenManagerService>();
             services.AddScoped<IDatabaseItemService<Note>, NoteService>();
             services.AddScoped<IDatabaseItemService<Folder>, FolderService>();
+            services.AddScoped<IDatabaseItemService<SharedNote>, SharedNotesService>();
+            services.AddScoped<IDatabaseItemService<SharedFolder>, SharedFoldersService>();
 
             services.AddAWSService<Amazon.S3.IAmazonS3>();
             services.AddSwaggerGen(c =>

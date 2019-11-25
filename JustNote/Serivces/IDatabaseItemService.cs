@@ -11,6 +11,7 @@ namespace JustNote.Serivces
         Task<T> Get(string id);
         Task<IEnumerable<T>> GetAllItems(string id); //user id
         Task<IEnumerable<T>> GetAllItemsFromFolder(string id); //folder id
+        Task<IEnumerable<T>> GetAllItemsFromDatabase();
         Task Update(string id, T item);
         Task Delete(string id);
     }

@@ -14,20 +14,28 @@ namespace JustNote.Serivces
 {
     public class NoteService : IDatabaseItemService<Note>
     {
+        private IDatabaseItemService<SharedNote> _sharedNotesService;
+        private IDatabaseItemService<SharedNote> _sharedFolersService;
+
+        public NoteService(IDatabaseItemService<SharedNote> sharedNotesService, IDatabaseItemService<SharedNote> sharedFolersService)
+        {
+            _sharedNotesService = sharedNotesService;
+            _sharedNotesService = sharedFolersService;
+        }
+
         public async Task Create(Note item)
         {
             await DatabaseData.Notes.InsertOneAsync(item);
 
-            if (item.FolderId != null)
-            {
-                SharedService sharedService = new SharedService();
-                IEnumerable<SharedFolder> sharedFolders = await sharedService.GetAvailableFoldersByFolderId(item.FolderId);
+            var sharedFolders = await _sharedNotesService.GetAllItems(item.FolderId);
+            var sharedNotes = new List<SharedNote>();
 
-                foreach (SharedFolder sharedFolder in sharedFolders)
-                {
-                    await sharedService.CreateNewNoteAccess(sharedFolder.UserId, item.Id, sharedFolder.Role);
-                }
+            foreach (var sharedFolder in sharedFolders )
+            {
+                sharedNotes.Add(new SharedNote() { NoteId = item.Id, UserId = sharedFolder.UserId, Role = sharedFolder.Role });
             }
+
+            await DatabaseData.SharedNotes.InsertManyAsync(sharedNotes);
         }
 
         public async Task<Note> Get(string id)
@@ -37,30 +45,28 @@ namespace JustNote.Serivces
 
         public async Task<IEnumerable<Note>> GetAllItems(string id)
         {
-            if (String.IsNullOrWhiteSpace(id))
-            {
-                return null;
-            }
+            var filter = FilterService<Note>.GetFilterByOneParam("UserId", new ObjectId(id));
+            var result = await DatabaseData.Notes.Find(filter).ToListAsync();
 
-            FilterDefinition<Note> filter = FilterService<Note>.GetFilterByOneParam("UserId", new ObjectId(id));
-
-            return await DatabaseData.Notes.Find(filter).ToListAsync();
+            return result;
         }
         public async Task<IEnumerable<Note>> GetAllItemsFromFolder(string id)
         {
-            if (String.IsNullOrWhiteSpace(id))
-            {
-                return null;
-            }
+            var filter = FilterService<Note>.GetFilterByOneParam("FolderId", new ObjectId(id));
+            var result = await DatabaseData.Notes.Find(filter).ToListAsync();
 
-            FilterDefinition<Note> filter = FilterService<Note>.GetFilterByOneParam("FolderId", new ObjectId(id));
+            return result;
+        }
+        public async Task<IEnumerable<Note>> GetAllItemsFromDatabase()
+        {
+            var result = await DatabaseData.Notes.Find(new BsonDocument()).ToListAsync();
 
-            return await DatabaseData.Notes.Find(filter).ToListAsync();
+            return result;
         }
 
         public async Task Update(string id, Note item)
         {
-            Note oldNote = Get(id).GetAwaiter().GetResult();
+            Note oldNote = await Get(id);
             item.Id = id;
             item.UserId = oldNote.UserId;
             item.NoteDate = DateTime.Now;

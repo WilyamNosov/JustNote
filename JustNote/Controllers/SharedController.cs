@@ -8,20 +8,18 @@ using JustNote.Serivces;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
 
-namespace JustNotes.Controllers
+namespace JustNote.Controllers
 {
-    [Route("api/Access")]
-    [ApiController]
-    public class SharedItemsController : Controller
+    [Route("api/Shared")]
+    public class SharedController : Controller
     {
         private TokenManagerService _tokenManagerService;
         private IDatabaseItemService<Folder> _folderService;
         private IDatabaseItemService<Note> _noteService;
         private IDatabaseItemService<SharedFolder> _sharedFolderService;
         private IDatabaseItemService<SharedNote> _sharedNoteService;
-        private SharedService _sharedService = new SharedService();
 
-        public SharedItemsController(TokenManagerService tokenManagerService, IDatabaseItemService<Folder> folderService, IDatabaseItemService<Note> noteService, 
+        public SharedController(TokenManagerService tokenManagerService, IDatabaseItemService<Folder> folderService, IDatabaseItemService<Note> noteService,
             IDatabaseItemService<SharedFolder> sharedFolderService, IDatabaseItemService<SharedNote> sharedNoteService)
         {
             _tokenManagerService = tokenManagerService;
@@ -38,10 +36,43 @@ namespace JustNotes.Controllers
             try
             {
                 var user = await new UserService().GetUser(_tokenManagerService.UserName, _tokenManagerService.UserHashKey);
-                var result = await _sharedService.GetSharedItems(user.Id);
+
+                var folders = await _folderService.GetAllItemsFromDatabase();
+                var notes = await _noteService.GetAllItemsFromDatabase();
+                var sharedFolders = await _sharedFolderService.GetAllItems(user.Id);
+                var sharedNotes = await _sharedFolderService.GetAllItems(user.Id);
+
+                var foldersResult = new List<Folder>();
+                var notesResult = new List<Note>();
+                var result = new List<object>();
+
+                foreach(var sharedFolder in sharedFolders)
+                {
+                    foreach (var folder in folders)
+                    {
+                        if (sharedFolder.FolderId == folder.Id)
+                        {
+                            foldersResult.Add(folder);
+                        }
+                    }
+                }
+
+                foreach (var sharedNote in sharedNotes)
+                {
+                    foreach (var note in notes)
+                    {
+                        if (sharedNote.FolderId == note.Id)
+                        {
+                            notesResult.Add(note);
+                        }
+                    }
+                }
+
+                result.Add(Json(foldersResult).Value);
+                result.Add(Json(notesResult).Value);
                 return Ok(result);
             }
-            catch
+            catch 
             {
                 return BadRequest();
             }
@@ -55,33 +86,11 @@ namespace JustNotes.Controllers
             {
                 var user = await new UserService().GetUser(_tokenManagerService.UserName, _tokenManagerService.UserHashKey);
 
-                var result = await _sharedService.GetAvailableItemsFromFolder(id, user.Id);
-                var parentFolder = await _folderService.Get(id);
-                //var previusparent = new List<Object>() { new TimedModel() { PreviouseParent = parentFolder.ParentFolderId} };
-                return Ok();
-                //return Ok(result.Concat(previusparent));
-            }
-            catch
-            {
-                return BadRequest();
-            }
-        }
+                var notes = _noteService.GetAllItemsFromFolder(id);
+                var previusparent = new List<Object>() { new TimedModel() { PreviouseParent = id } };
+                var result = new List<object>() { Json(notes).Value, previusparent};
 
-        [JustNotesAuthorize]
-        [HttpPost("Create/Folder/{id}")]
-        public async Task<IActionResult> CreateNewFoler(string id, string token, [FromBody]Folder folder)
-        {
-            try
-            {
-                User user = await new UserService().GetUser(_tokenManagerService.UserName, _tokenManagerService.UserHashKey);
-
-                var parentFolder = await _folderService.Get(id);
-
-                folder.FolderDate = DateTime.Now;
-                folder.UserId = parentFolder.UserId;
-
-                await _folderService.Create(folder);
-                return Ok();
+                return Ok(result);
             }
             catch
             {
@@ -91,15 +100,23 @@ namespace JustNotes.Controllers
 
         [JustNotesAuthorize]
         [HttpPost("Folder/{id}")]
-        public async Task<IActionResult> GetFolderAccess(string id, string token, [FromBody]Object inputValue)
+        public async Task<IActionResult> CreateFolderAccess(string id, string token, [FromBody]Object inputValue)
         {
             try
             {
-                string userEmail = JObject.Parse(inputValue.ToString()).Value<String>("UserEmail");
-                string role = JObject.Parse(inputValue.ToString()).Value<String>("Role");
-                string userId = new UserService().GetUserByEmail(userEmail).GetAwaiter().GetResult().Id;
+                var userEmail = JObject.Parse(inputValue.ToString()).Value<String>("UserEmail");
+                var user = await new UserService().GetUserByEmail(userEmail);
+                var role = JObject.Parse(inputValue.ToString()).Value<String>("Role");
 
-                await _sharedService.CreateNewFolderAccess(userId, id, role);
+                var sharedFolderModel = new SharedFolder()
+                {
+                    UserId = user.Id,
+                    FolderId = id,
+                    Role = role
+                };
+
+                await _sharedFolderService.Create(sharedFolderModel);
+
                 return Ok();
             }
             catch
@@ -114,8 +131,6 @@ namespace JustNotes.Controllers
         {
             try
             {
-                User user = new UserService().GetUser(_tokenManagerService.UserName, _tokenManagerService.UserHashKey).GetAwaiter().GetResult();
-
                 var parentFolder = await _folderService.Get(id);
 
                 note.NoteDate = DateTime.Now;

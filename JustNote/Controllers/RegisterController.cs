@@ -14,30 +14,37 @@ namespace JustNotes.Controllers
     [ApiController]
     public class RegisterController : Controller
     {
-        private ConfirmEmailService emailService = new ConfirmEmailService();
+        private ConfirmEmailService _emailService = new ConfirmEmailService();
+        private IDatabaseItemService<User> _userService;
+
+        public RegisterController(IDatabaseItemService<User> userService)
+        {
+            _userService = userService;
+        }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> ConfirmEmail(string id)
         {
             try
             {
-                await emailService.AcceptConfirmMessage(id);
-                return Ok();
+                var result = await _emailService.AcceptConfirmMessage(id);
+                return Redirect(result);
             }
-            catch (Exception ex)
+            catch
             {
-                return Redirect(ex.Message);
+                return BadRequest();
             }
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateNewUser([FromBody] Registration newUser)
+        public async Task<IActionResult> CreateNewUser([FromBody] User user)
         {
-            string hashKey = new HashKeyService().GetHashKey(newUser.Password);
-            if (await new UserService().CreateUser(newUser, hashKey))
+            try
             {
-                var user = new UserService().GetUserByEmail(newUser.Email).GetAwaiter().GetResult();
-                
+                var hashKey = new HashKeyService().GetHashKey(user.HashKey);
+                user.HashKey = hashKey;
+                await _userService.Create(user);
+
                 var callbackUrl = @"https://cb5eza7o22.execute-api.us-west-2.amazonaws.com/Prod/api/Register/" + new TokenManagerService().GenerateConfirmEmailToken(user.Email);
                 var confirmEmailFormString = "";
 
@@ -48,18 +55,20 @@ namespace JustNotes.Controllers
                     confirmEmailFormString = Encoding.Default.GetString(byteArray);
                 }
 
-                var outMessage = confirmEmailFormString.Split('|')[0] + newUser.Email.ToString();
+                var outMessage = confirmEmailFormString.Split('|')[0] + user.Email.ToString();
                 foreach (var partOfMessage in confirmEmailFormString.Split('|')[1].Split('@'))
                 {
                     outMessage += partOfMessage + callbackUrl;
                 }
 
-                await emailService.SendConfirmMessage(user.Email, "Confirm you account", outMessage.Substring(0, outMessage.Length - callbackUrl.Length));
+                await _emailService.SendConfirmMessage(user.Email, "Confirm you account", outMessage.Substring(0, outMessage.Length - callbackUrl.Length));
 
                 return Ok();
-            }
 
-            return Unauthorized();
+            } catch
+            {
+                return BadRequest();
+            }
         }
     }
 }

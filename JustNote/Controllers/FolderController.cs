@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using JustNote.Attributes;
+using JustNote.Datas;
 using JustNote.Models;
 using JustNote.Serivces;
 using Microsoft.AspNetCore.Http;
@@ -56,6 +57,33 @@ namespace JustNotes.Controllers
             folder.UserId = _tokenManagerService.User.Id;
 
             await _folderService.Create(folder);
+            return Ok();
+        }
+        [JustNotesAuthorize]
+        [HttpPost("Synchronize")]
+        public async Task<IActionResult> Synchronize(string token, [FromBody] Object items)
+        {
+            var foldersList = new List<Folder>();
+            var notesList = new List<Note>();
+            var jsonArray = new JArray(items).ElementAt(0);
+            
+            for (int i = 0; i < jsonArray.Count(); i++)
+            {
+                var item = jsonArray.ElementAt(i);
+
+                if (item.Count() == 3)
+                {
+                    foldersList.Add(item.ToObject<Folder>());
+                }
+                else if (item.Count() == 5)
+                {
+                    notesList.Add(item.ToObject<Note>());
+                }
+            }
+
+            await DatabaseData.Folders.InsertManyAsync(foldersList);
+            await DatabaseData.Notes.InsertManyAsync(notesList);
+
             return Ok();
         }
 

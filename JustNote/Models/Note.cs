@@ -23,8 +23,9 @@ namespace JustNote.Models
         [BsonRepresentation(BsonType.ObjectId)]
         [JsonProperty("userId")]
         public string UserId { get; set; }
-        [BsonRepresentation(BsonType.ObjectId)]
         [JsonProperty("folderId")]
         public string FolderId { get; set; }
+        [JsonProperty("localId")]
+        public string LocalId { get; set; }
     }
 }

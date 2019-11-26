@@ -22,7 +22,7 @@ namespace JustNote.Serivces
         {
             if (!String.IsNullOrWhiteSpace(id))
             {
-                var result = await DatabaseData.Folders.Find(new BsonDocument("_id", new ObjectId(id))).FirstOrDefaultAsync();
+                var result = await DatabaseData.Folders.Find(new BsonDocument("LocalId", id)).FirstOrDefaultAsync();
 
                 return result;
             }
@@ -66,17 +66,16 @@ namespace JustNote.Serivces
         {
             Folder oldFolder = await Get(id);
 
-            item.Id = id;
-            item.UserId = oldFolder.UserId;
-            item.FolderDate = DateTime.Now;
+            oldFolder.FolderName = item.FolderName;
+            oldFolder.FolderDate = DateTime.Now;
 
-            await DatabaseData.Folders.ReplaceOneAsync(new BsonDocument("_id", new ObjectId(item.Id)), item);
+            await DatabaseData.Folders.ReplaceOneAsync(new BsonDocument("LocalId", oldFolder.LocalId), oldFolder);
         }
 
         public async Task Delete(string id)
         {
-            await DatabaseData.Notes.DeleteManyAsync(new BsonDocument("FolderId", new ObjectId(id)));
-            await DatabaseData.Folders.DeleteOneAsync(new BsonDocument("_id", new ObjectId(id)));
+            await DatabaseData.Notes.DeleteManyAsync(new BsonDocument("FolderId", id));
+            await DatabaseData.Folders.DeleteOneAsync(new BsonDocument("LocalId", id));
         }
     }
 }

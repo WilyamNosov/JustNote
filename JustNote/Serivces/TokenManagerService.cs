@@ -47,21 +47,27 @@ namespace JustNote.Serivces
                 ClaimsIdentity identity = simplePrinciple.Identity as ClaimsIdentity;
 
                 if (identity == null)
+                {
                     return false;
+                }
 
                 if (!identity.IsAuthenticated)
+                {
                     return false;
+                }
 
+                
                 Claim usernameClaim = identity.FindFirst(ClaimTypes.Name);
-                Claim hashkeyClaim = identity.FindFirst(ClaimTypes.Hash);
+                Claim hashkeyClaim  = identity.FindFirst(ClaimTypes.Hash);
 
-                User = new UserService().GetUser(usernameClaim?.Value, hashkeyClaim?.Value).GetAwaiter().GetResult();
+                User = new UzverService().GetUser(usernameClaim?.Value, hashkeyClaim?.Value).GetAwaiter().GetResult();
 
-                if (string.IsNullOrEmpty(UserName) || string.IsNullOrEmpty(UserHashKey))
+                if (User == null)
+                {
                     return false;
+                }
 
                 return true;
-
             }
             catch
             {

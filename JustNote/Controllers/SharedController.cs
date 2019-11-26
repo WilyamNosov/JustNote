@@ -18,15 +18,17 @@ namespace JustNote.Controllers
         private IDatabaseItemService<Note> _noteService;
         private IDatabaseItemService<SharedFolder> _sharedFolderService;
         private IDatabaseItemService<SharedNote> _sharedNoteService;
+        private IDatabaseItemService<User> _userService;
 
         public SharedController(TokenManagerService tokenManagerService, IDatabaseItemService<Folder> folderService, IDatabaseItemService<Note> noteService,
-            IDatabaseItemService<SharedFolder> sharedFolderService, IDatabaseItemService<SharedNote> sharedNoteService)
+            IDatabaseItemService<SharedFolder> sharedFolderService, IDatabaseItemService<SharedNote> sharedNoteService, IDatabaseItemService<User> userService)
         {
             _tokenManagerService = tokenManagerService;
             _folderService = folderService;
             _noteService = noteService;
             _sharedFolderService = sharedFolderService;
             _sharedNoteService = sharedNoteService;
+            _userService = userService;
         }
 
         [JustNotesAuthorize]
@@ -35,12 +37,13 @@ namespace JustNote.Controllers
         {
             try
             {
-                var user = await new UserService().GetUser(_tokenManagerService.UserName, _tokenManagerService.UserHashKey);
+                var user = await _userService.Get(_tokenManagerService.User.Id);//new UserService().GetUser(_tokenManagerService.UserName, _tokenManagerService.UserHashKey);
+                var x = _tokenManagerService.User.Id;
 
                 var folders = await _folderService.GetAllItemsFromDatabase();
                 var notes = await _noteService.GetAllItemsFromDatabase();
                 var sharedFolders = await _sharedFolderService.GetAllItems(user.Id);
-                var sharedNotes = await _sharedFolderService.GetAllItems(user.Id);
+                var sharedNotes = await _sharedNoteService.GetAllItems(user.Id);
 
                 var foldersResult = new List<Folder>();
                 var notesResult = new List<Note>();
@@ -61,7 +64,7 @@ namespace JustNote.Controllers
                 {
                     foreach (var note in notes)
                     {
-                        if (sharedNote.FolderId == note.Id)
+                        if (sharedNote.NoteId == note.Id)
                         {
                             notesResult.Add(note);
                         }
@@ -72,8 +75,9 @@ namespace JustNote.Controllers
                 result.Add(Json(notesResult).Value);
                 return Ok(result);
             }
-            catch 
+            catch (Exception ex)
             {
+                var x = ex.Message;
                 return BadRequest();
             }
         }
@@ -86,7 +90,7 @@ namespace JustNote.Controllers
             {
                 var user = await new UserService().GetUser(_tokenManagerService.UserName, _tokenManagerService.UserHashKey);
 
-                var notes = _noteService.GetAllItemsFromFolder(id);
+                var notes = await _noteService.GetAllItemsFromFolder(id);
                 var previusparent = new List<Object>() { new TimedModel() { PreviouseParent = id } };
                 var result = new List<object>() { Json(notes).Value, previusparent};
 

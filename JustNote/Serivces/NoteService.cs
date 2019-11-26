@@ -14,33 +14,27 @@ namespace JustNote.Serivces
 {
     public class NoteService : IDatabaseItemService<Note>
     {
-        private IDatabaseItemService<SharedNote> _sharedNotesService;
-        private IDatabaseItemService<SharedFolder> _sharedFolersService;
-
-        public NoteService(IDatabaseItemService<SharedNote> sharedNotesService, IDatabaseItemService<SharedFolder> sharedFolersService)
-        {
-            _sharedNotesService = sharedNotesService;
-            _sharedFolersService = sharedFolersService;
-        }
-
         public async Task Create(Note item)
         {
             await DatabaseData.Notes.InsertOneAsync(item);
 
-            var sharedFolders = await _sharedFolersService.GetAllItems(item.FolderId);
-            var sharedNotes = new List<SharedNote>();
+            //if (item.FolderId != null)
+            //{
+            //    var sharedFolders = await DatabaseData.SharedFolders.Find(new BsonDocument("FolderId", new ObjectId(item.FolderId))).ToListAsync();
+            //    var sharedNotes = new List<SharedNote>();
 
-            foreach (var sharedFolder in sharedFolders )
-            {
-                sharedNotes.Add(new SharedNote() { NoteId = item.Id, UserId = sharedFolder.UserId, Role = sharedFolder.Role });
-            }
+            //    foreach (var sharedFolder in sharedFolders)
+            //    {
+            //        sharedNotes.Add(new SharedNote() { NoteId = item.Id, UserId = sharedFolder.UserId, Role = sharedFolder.Role });
+            //    }
 
-            await DatabaseData.SharedNotes.InsertManyAsync(sharedNotes);
+            //    await DatabaseData.SharedNotes.InsertManyAsync(sharedNotes);
+            //}
         }
 
         public async Task<Note> Get(string id)
         {
-            return await DatabaseData.Notes.Find(new BsonDocument("_id", new ObjectId(id))).FirstOrDefaultAsync();
+            return await DatabaseData.Notes.Find(new BsonDocument("LocalId", id)).FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<Note>> GetAllItems(string id)
@@ -67,17 +61,19 @@ namespace JustNote.Serivces
         public async Task Update(string id, Note item)
         {
             Note oldNote = await Get(id);
-            item.Id = id;
+
+            item.Id = oldNote.Id;
             item.UserId = oldNote.UserId;
             item.NoteDate = DateTime.Now;
             item.FolderId = oldNote.FolderId;
+            item.LocalId = oldNote.LocalId;
 
-            await DatabaseData.Notes.ReplaceOneAsync(new BsonDocument("_id", new ObjectId(id)), item);
+            await DatabaseData.Notes.ReplaceOneAsync(new BsonDocument("LocalId", id), item);
         }
 
         public async Task Delete(string id)
         {
-            await DatabaseData.Notes.DeleteOneAsync(new BsonDocument("_id", new ObjectId(id)));
+            await DatabaseData.Notes.DeleteOneAsync(new BsonDocument("LocalId", id));
         }
     }
 }

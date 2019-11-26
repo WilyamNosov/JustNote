@@ -48,7 +48,7 @@ namespace JustNotes.Controllers
         {
             note.NoteDate = DateTime.Now;
             note.UserId = _tokenManagerService.User.Id;
-            note.FolderId = id;
+            note.FolderId = id.ToString();
 
             await _noteService.Create(note);
             return Ok();

@@ -6,6 +6,7 @@ using JustNote.Models;
 using JustNote.Serivces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
 
 namespace JustNotes.Controllers
 {
@@ -13,21 +14,30 @@ namespace JustNotes.Controllers
     [ApiController]
     public class LoginController : Controller
     {
-        [HttpPost]
-        public async Task<IActionResult> LoginUser(Login loginObject)
+        IDatabaseItemService<User> _userService;
+
+        public LoginController(IDatabaseItemService<User> userService)
         {
-            var userName = loginObject.UserName;
-            var password = loginObject.UserPassword;
+            _userService = userService;
+        }
 
-            var user = await new UserService().GetUser(userName, new HashKeyService().GetHashKey(password));
+        [HttpPost]
+        public async Task<IActionResult> LoginUser(Object inputValue)
+        {
+            var userName = JObject.Parse(inputValue.ToString()).Value<String>("UserName");
+            var password = JObject.Parse(inputValue.ToString()).Value<String>("UserPassword");
+            var hashKey = new HashKeyService().GetHashKey(password);
 
-            if (user != null && user.ConfirmedEmail == true)
+            try
             {
+                var user = await new UserService().GetUser(userName, hashKey);
                 var token = new TokenManagerService().GenerateToken(userName, user.HashKey);
-                return Ok(token);
-            }
 
-            return Unauthorized();
+                return Ok(token);
+            } catch
+            {
+                return Unauthorized();
+            }
         }
     }
 }

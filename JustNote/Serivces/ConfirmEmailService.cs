@@ -10,7 +10,7 @@ namespace JustNote.Serivces
 {
     public class ConfirmEmailService
     {
-        private UserService userService = new UserService();
+        private UzverService _userService = new UzverService();
         private string email;
 
         public async Task SendConfirmMessage(string email, string subject, string message)
@@ -34,20 +34,21 @@ namespace JustNote.Serivces
                 await client.DisconnectAsync(true);
             }
         }
-        public async Task AcceptConfirmMessage(string token)
+        public async Task<string> AcceptConfirmMessage(string token)
         {
             if (new TokenManagerService().ValidateConfirmEmailToken(token, out email))
             {
-                User user = await userService.GetUserByEmail(email);
+                User user = await _userService.GetUserByEmail(email);
                 
                 if (user.ConfirmedEmail != true)
                 {
                     user.ConfirmedEmail = true;
-                    await userService.UpdateUser(user);
+                    await _userService.Update(user.Id, user);
+                    return $"https://testawslambdas3bucket.s3.us-west-2.amazonaws.com/index.html";
                 }
-
-                throw new Exception($"https://testawslambdas3bucket.s3.us-west-2.amazonaws.com/index.html");
             }
+
+            throw new Exception("Bad request.");
         }
     }
 }

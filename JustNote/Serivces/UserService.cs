@@ -25,7 +25,7 @@ namespace JustNote.Serivces
                 ConfirmedEmail = false
             };
 
-            if (CheckUserInDB(generateUser))
+            if (await CheckUserInDB(generateUser))
             {
                 await DatabaseData.Users.InsertOneAsync(generateUser);
                 return true;
@@ -84,9 +84,9 @@ namespace JustNote.Serivces
             await DatabaseData.Users.ReplaceOneAsync(new BsonDocument("_id", new ObjectId(user.Id)), user);
         }
 
-        private bool CheckUserInDB(User newUser)
+        private async Task<bool> CheckUserInDB(User newUser)
         {
-            IEnumerable<User> users = GetAllUsers().GetAwaiter().GetResult();
+            IEnumerable<User> users = await GetAllUsers();
 
             foreach (User user in users)
             {

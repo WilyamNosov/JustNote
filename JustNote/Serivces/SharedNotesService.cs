@@ -16,7 +16,7 @@ namespace JustNote.Serivces
         public async Task Create(SharedNote item)
         {
             var propertyList = new List<string>() { "UserId", "NoteId" };
-            var valueList = new List<object>() { new ObjectId(item.UserId), new ObjectId(item.NoteId)};
+            var valueList = new List<object>() { new ObjectId(item.UserId), item.NoteId};
 
             var filter = FilterService<SharedNote>.GetFilterByTwoParam(propertyList, valueList);
             var sharedNote = await DatabaseData.SharedNotes.Find(filter).FirstOrDefaultAsync();
@@ -25,12 +25,14 @@ namespace JustNote.Serivces
             {
                 throw new Exception("The user have access to this note");
             }
-            else if (sharedNote.Role != item.Role)
+            else if (sharedNote != null && sharedNote.Role != item.Role)
             {
+                item.Id = sharedNote.Id;
                 await Update(item.Id, item);
             }
-
-            await DatabaseData.SharedNotes.InsertOneAsync(item);
+            else {
+                await DatabaseData.SharedNotes.InsertOneAsync(item);
+            }
         }
 
         public async Task<SharedNote> Get(string id)

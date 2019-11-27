@@ -15,7 +15,6 @@ namespace JustNote.Models
         public string Id { get; set; }
         [BsonRepresentation(BsonType.ObjectId)]
         public string UserId { get; set; }
-        [BsonRepresentation(BsonType.ObjectId)]
         public string NoteId { get; set; }
         public string Role { get; set; }
     }

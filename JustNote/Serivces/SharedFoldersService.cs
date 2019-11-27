@@ -25,7 +25,7 @@ namespace JustNote.Serivces
         public async Task Create(SharedFolder item)
         {
             var propertyList = new List<string>() { "UserId", "FolderId" };
-            var valueList = new List<object>() { new ObjectId(item.UserId), new ObjectId(item.FolderId) };
+            var valueList = new List<object>() { new ObjectId(item.UserId), item.FolderId };
             var filter = FilterService<SharedFolder>.GetFilterByTwoParam(propertyList, valueList);
             var sharedFolder = await DatabaseData.SharedFolders.Find(filter).FirstOrDefaultAsync();
 
@@ -33,9 +33,10 @@ namespace JustNote.Serivces
             {
                 throw new Exception("The user have access to this folder");
             } 
-            else if (sharedFolder.Role != item.Role)
+            else if (sharedFolder != null && sharedFolder.Role != item.Role)
             {
-                await Update(sharedFolder.Id, item);
+                sharedFolder.Role = item.Role;
+                await Update(sharedFolder.Id, sharedFolder);
             }
             else
             {
@@ -92,20 +93,26 @@ namespace JustNote.Serivces
             var notesFromFolder = await _noteService.GetAllItemsFromFolder(sharedFolder.FolderId);
             var userSharedNotes = await _sharedNoteService.GetAllItems(sharedFolder.UserId);
             var notesShareResult = new List<SharedNote>();
+            bool flag = true;
 
             foreach (var noteFromFolder in notesFromFolder)
             {
                 foreach (var userSharedNote in userSharedNotes)
                 {
-                    if (noteFromFolder.Id == userSharedNote.NoteId)
+                    if (noteFromFolder.LocalId == userSharedNote.NoteId)
                     {
                         await _sharedNoteService.Delete(userSharedNote.Id);
-                        notesShareResult.Add(new SharedNote() { UserId = sharedFolder.UserId, NoteId = noteFromFolder.Id, Role = sharedFolder.Role });
+                        notesShareResult.Add(new SharedNote() { UserId = sharedFolder.UserId, NoteId = noteFromFolder.LocalId, Role = sharedFolder.Role });
+                        flag = true;
                     }
                     else
                     {
-                        notesShareResult.Add(new SharedNote() { UserId = sharedFolder.UserId, NoteId = noteFromFolder.Id, Role = sharedFolder.Role });
+                        flag = false;
                     }
+                }
+                if (!flag)
+                {
+                    notesShareResult.Add(new SharedNote() { UserId = sharedFolder.UserId, NoteId = noteFromFolder.LocalId, Role = sharedFolder.Role });
                 }
             }
 

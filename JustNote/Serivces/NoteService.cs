@@ -18,18 +18,18 @@ namespace JustNote.Serivces
         {
             await DatabaseData.Notes.InsertOneAsync(item);
 
-            //if (item.FolderId != null)
-            //{
-            //    var sharedFolders = await DatabaseData.SharedFolders.Find(new BsonDocument("FolderId", new ObjectId(item.FolderId))).ToListAsync();
-            //    var sharedNotes = new List<SharedNote>();
+            if (item.FolderId != null)
+            {
+                var sharedFolders = await DatabaseData.SharedFolders.Find(new BsonDocument("FolderId", item.FolderId)).ToListAsync();
+                var sharedNotes = new List<SharedNote>();
 
-            //    foreach (var sharedFolder in sharedFolders)
-            //    {
-            //        sharedNotes.Add(new SharedNote() { NoteId = item.Id, UserId = sharedFolder.UserId, Role = sharedFolder.Role });
-            //    }
+                foreach (var sharedFolder in sharedFolders)
+                {
+                    sharedNotes.Add(new SharedNote() { NoteId = item.LocalId, UserId = sharedFolder.UserId, Role = sharedFolder.Role });
+                }
 
-            //    await DatabaseData.SharedNotes.InsertManyAsync(sharedNotes);
-            //}
+                await DatabaseData.SharedNotes.InsertManyAsync(sharedNotes);
+            }
         }
 
         public async Task<Note> Get(string id)
@@ -46,7 +46,7 @@ namespace JustNote.Serivces
         }
         public async Task<IEnumerable<Note>> GetAllItemsFromFolder(string id)
         {
-            var filter = FilterService<Note>.GetFilterByOneParam("FolderId", new ObjectId(id));
+            var filter = FilterService<Note>.GetFilterByOneParam("FolderId", id);
             var result = await DatabaseData.Notes.Find(filter).ToListAsync();
 
             return result;

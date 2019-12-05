@@ -23,5 +23,7 @@ namespace JustNote.Models
         public string UserId { get; set; }
         [JsonProperty("localId")]
         public string LocalId { get; set; }
+        [BsonIgnoreIfNull]
+        public string Role { get; set; }
     }
 }

@@ -8,6 +8,7 @@ using JustNote.Models;
 using JustNote.Serivces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
 using Newtonsoft.Json.Linq;
 
 namespace JustNotes.Controllers
@@ -44,9 +45,9 @@ namespace JustNotes.Controllers
         public async Task<IActionResult> Get(string id, string token)
         {
             var notes = Json(await _noteService.GetAllItemsFromFolder(id));
-            var result = new List<Object>() { notes.Value, new TimedModel() { PreviouseParent = id } };
+            //var result = new List<Object>() { notes.Value, new TimedModel() { PreviouseParent = id } };
 
-            return Ok(result);
+            return Ok(notes);
         }
 
         [JustNotesAuthorize]
@@ -66,23 +67,43 @@ namespace JustNotes.Controllers
             var foldersList = new List<Folder>();
             var notesList = new List<Note>();
             var jsonArray = new JArray(items).ElementAt(0);
-            
+            var folder = new Folder();
+            var note = new Note();
+
             for (int i = 0; i < jsonArray.Count(); i++)
             {
                 var item = jsonArray.ElementAt(i);
 
-                if (item.Count() == 3)
+                if (item.Count() == 3 && item.Count() == 6)
                 {
-                    foldersList.Add(item.ToObject<Folder>());
+                    folder = item.ToObject<Folder>();
+                    folder.UserId = _tokenManagerService.User.Id;
+                    foldersList.Add(folder);
                 }
-                else if (item.Count() == 5)
+                else if (item.Count() == 5 && item.Count() == 8)
                 {
-                    notesList.Add(item.ToObject<Note>());
+                    note = item.ToObject<Note>();
+                    note.UserId = _tokenManagerService.User.Id;
+                    notesList.Add(note);
                 }
             }
 
-            await DatabaseData.Folders.InsertManyAsync(foldersList);
-            await DatabaseData.Notes.InsertManyAsync(notesList);
+
+            // move to services
+            var curentFolders = await _folderService.GetAllItems(_tokenManagerService.User.Id);
+            var curentNotes = await _noteService.GetAllItems(_tokenManagerService.User.Id);
+
+            await DatabaseData.Folders.DeleteManyAsync(new BsonDocument("UserId", new ObjectId(_tokenManagerService.User.Id)));
+            await DatabaseData.Notes.DeleteManyAsync(new BsonDocument("UserId", new ObjectId(_tokenManagerService.User.Id)));
+
+            if (foldersList.Count > 0)
+            {
+                await DatabaseData.Folders.InsertManyAsync(foldersList);
+            }
+            if (notesList.Count > 0)
+            {
+                await DatabaseData.Notes.InsertManyAsync(notesList);
+            }
 
             return Ok();
         }

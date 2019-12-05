@@ -32,11 +32,10 @@ namespace JustNotes.Controllers
 
         [JustNotesAuthorize]
         [HttpPost]
-        public async Task<IActionResult> Post(string token, [FromBody] Note note, string folderId = null)
+        public async Task<IActionResult> Post(string token, [FromBody] Note note)
         {
             note.NoteDate = DateTime.Now;
             note.UserId = _tokenManagerService.User.Id;
-            note.FolderId = folderId;
 
             await _noteService.Create(note);
             return Ok();

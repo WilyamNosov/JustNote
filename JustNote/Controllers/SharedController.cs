@@ -53,8 +53,9 @@ namespace JustNote.Controllers
                 {
                     foreach (var folder in folders)
                     {
-                        if (sharedFolder.FolderId == folder.Id)
+                        if (sharedFolder.FolderId == folder.LocalId)
                         {
+                            folder.Role = sharedFolder.Role;
                             foldersResult.Add(folder);
                         }
                     }
@@ -64,8 +65,9 @@ namespace JustNote.Controllers
                 {
                     foreach (var note in notes)
                     {
-                        if (sharedNote.NoteId == note.Id)
+                        if (sharedNote.NoteId == note.LocalId)
                         {
+                            note.Role = sharedNote.Role;
                             notesResult.Add(note);
                         }
                     }
@@ -88,11 +90,22 @@ namespace JustNote.Controllers
         {
             try
             {
-                var user = await new UserService().GetUser(_tokenManagerService.UserName, _tokenManagerService.UserHashKey);
-
+                var user = await _userService.Get(_tokenManagerService.User.Id);
                 var notes = await _noteService.GetAllItemsFromFolder(id);
-                var previusparent = new List<Object>() { new TimedModel() { PreviouseParent = id } };
-                var result = new List<object>() { Json(notes).Value, previusparent};
+                var sharedNotes = await _sharedNoteService.GetAllItems(user.Id);
+                var result = new List<Note>();
+
+                foreach (var note in notes)
+                {
+                    foreach (var sharedNote in sharedNotes)
+                    {
+                        if (note.LocalId == sharedNote.NoteId)
+                        {
+                            note.Role = sharedNote.Role;
+                            result.Add(note);
+                        }
+                    }
+                }
 
                 return Ok(result);
             }

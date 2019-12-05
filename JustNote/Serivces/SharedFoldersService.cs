@@ -103,20 +103,22 @@ namespace JustNote.Serivces
                     {
                         await _sharedNoteService.Delete(userSharedNote.Id);
                         notesShareResult.Add(new SharedNote() { UserId = sharedFolder.UserId, NoteId = noteFromFolder.LocalId, Role = sharedFolder.Role });
-                        flag = true;
+                        flag = false;
                     }
                     else
                     {
-                        flag = false;
+                        flag = true;
                     }
                 }
-                if (!flag)
+                if (flag)
                 {
                     notesShareResult.Add(new SharedNote() { UserId = sharedFolder.UserId, NoteId = noteFromFolder.LocalId, Role = sharedFolder.Role });
                 }
             }
-
-            await DatabaseData.SharedNotes.InsertManyAsync(notesShareResult);
+            if (notesShareResult.Count > 0)
+            {
+                await DatabaseData.SharedNotes.InsertManyAsync(notesShareResult);
+            }
         }
     }
 }

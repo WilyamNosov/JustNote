@@ -73,6 +73,7 @@ namespace JustNote.Serivces
 
         public async Task Delete(string id)
         {
+            await DatabaseData.SharedNotes.DeleteManyAsync(new BsonDocument("NoteId", id));
             await DatabaseData.Notes.DeleteOneAsync(new BsonDocument("LocalId", id));
         }
     }

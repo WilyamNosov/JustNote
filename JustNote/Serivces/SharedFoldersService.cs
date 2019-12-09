@@ -68,9 +68,14 @@ namespace JustNote.Serivces
             return result;
         }
 
-        public Task<IEnumerable<SharedFolder>> GetAllItemsFromFolder(string id)
+        public async Task<IEnumerable<SharedFolder>> GetAllItemsFromFolder(string id)
         {
-            throw new NotImplementedException();
+            /*
+             * GET ALL ITEMS BY FOLDER ID
+             */
+            var result = await DatabaseData.SharedFolders.Find(new BsonDocument("FolderId", id)).ToListAsync();
+
+            return result;
         }
 
         public Task<IEnumerable<SharedFolder>> GetAllItemsFromDatabase()
@@ -85,8 +90,7 @@ namespace JustNote.Serivces
 
         public async Task Delete(string id)
         {
-            var folder = await _folderService.Get(id);
-            //Need get Email
+            await DatabaseData.SharedFolders.DeleteOneAsync(id);
         }
         private async Task ShareNotesFromFolder(SharedFolder sharedFolder)
         {

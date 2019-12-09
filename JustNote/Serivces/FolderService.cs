@@ -13,6 +13,13 @@ namespace JustNote.Serivces
 {
     public class FolderService : IDatabaseItemService<Folder>
     {
+        private IDatabaseItemService<Note> _noteService;
+
+        public FolderService(IDatabaseItemService<Note> noteService)
+        {
+            _noteService = noteService;
+        }
+
         public async Task Create(Folder item)
         {
             await DatabaseData.Folders.InsertOneAsync(item);
@@ -74,6 +81,14 @@ namespace JustNote.Serivces
 
         public async Task Delete(string id)
         {
+            var notes = await _noteService.GetAllItemsFromFolder(id);
+
+            foreach(var note in notes)
+            {
+                await DatabaseData.SharedNotes.DeleteManyAsync(new BsonDocument("NoteId", note.LocalId));
+            }
+
+            await DatabaseData.SharedFolders.DeleteManyAsync(new BsonDocument("FolderId", id));
             await DatabaseData.Notes.DeleteManyAsync(new BsonDocument("FolderId", id));
             await DatabaseData.Folders.DeleteOneAsync(new BsonDocument("LocalId", id));
         }

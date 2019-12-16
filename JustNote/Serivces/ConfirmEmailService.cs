@@ -17,7 +17,7 @@ namespace JustNote.Serivces
         {
             MimeMessage emailMessage = new MimeMessage();
 
-            emailMessage.From.Add(new MailboxAddress("JustNote", "justnotemail@gmail.com"));
+            emailMessage.From.Add(new MailboxAddress("JustNote", "justnotemain@gmail.com"));
             emailMessage.To.Add(new MailboxAddress("", email));
             emailMessage.Subject = subject;
             emailMessage.Body = new TextPart(MimeKit.Text.TextFormat.Html)

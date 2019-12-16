@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using JustNote.Models;
@@ -48,11 +49,15 @@ namespace JustNotes.Controllers
                 var callbackUrl = @"https://cb5eza7o22.execute-api.us-west-2.amazonaws.com/Prod/api/Register/" + new TokenManagerService().GenerateConfirmEmailToken(user.Email);
                 var confirmEmailFormString = "";
 
-                using (System.IO.FileStream fs = System.IO.File.OpenRead("Pages/ConfirmEmailForm.html"))
+                var page = @"https://justnoteservices3bucket.s3-us-west-2.amazonaws.com/ConfirmEmailForm.html";
+
+                var webRequest = WebRequest.Create(page);
+
+                var response = webRequest.GetResponse();
+                var content = response.GetResponseStream();
+                using (var reader = new System.IO.StreamReader(content))
                 {
-                    var byteArray = new byte[fs.Length];
-                    fs.Read(byteArray, 0, byteArray.Length);
-                    confirmEmailFormString = Encoding.Default.GetString(byteArray);
+                    confirmEmailFormString = reader.ReadToEnd();
                 }
 
                 var outMessage = confirmEmailFormString.Split('|')[0] + user.Email.ToString();

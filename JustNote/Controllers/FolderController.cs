@@ -74,13 +74,12 @@ namespace JustNotes.Controllers
             {
                 var item = jsonArray.ElementAt(i);
 
-                if (item.Count() == 3 || item.Count() == 6)
+                folder = item.ToObject<Folder>();
+                if (folder.FolderName != null)
                 {
-                    folder = item.ToObject<Folder>();
                     folder.UserId = _tokenManagerService.User.Id;
                     foldersList.Add(folder);
-                }
-                else if (item.Count() == 5 || item.Count() == 8)
+                } else
                 {
                     note = item.ToObject<Note>();
                     note.UserId = _tokenManagerService.User.Id;

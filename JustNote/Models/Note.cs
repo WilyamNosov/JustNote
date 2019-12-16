@@ -28,6 +28,9 @@ namespace JustNote.Models
         [JsonProperty("localId")]
         public string LocalId { get; set; }
         [BsonIgnoreIfNull]
+        [JsonProperty("role")]
         public string Role { get; set; }
+        [JsonProperty("imageArray")]
+        public List<string> ImageArray { get; set; }
     }
 }

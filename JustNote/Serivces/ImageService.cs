@@ -9,44 +9,50 @@ using System.Threading.Tasks;
 
 namespace JustNote.Serivces
 {
-    public class ImageService : IDatabaseItemService<Image>
+    public class ImageService : IDatabaseItemService<Picture>
     {
-        public async Task Create(Image item)
+        public async Task Create(Picture item)
         {
-            await DatabaseData.Image.InsertOneAsync(item);
+            await DatabaseData.Pictires.InsertOneAsync(item);
         }
 
-        public async Task<Image> Get(string id)
+        public async Task CreateManyItems(List<Picture> items)
         {
-            var result = await DatabaseData.Image.Find(new BsonDocument("LocalId", id)).FirstOrDefaultAsync();
+            await DatabaseData.Pictires.InsertManyAsync(items);
+        }
+
+        public async Task<Picture> Get(string id)
+        {
+            var result = await DatabaseData.Pictires.Find(new BsonDocument("LocalId", id)).FirstOrDefaultAsync();
             return result;
         }
 
-        public async Task<IEnumerable<Image>> GetAllItems(string id)
+        public async Task<IEnumerable<Picture>> GetAllItems(string id)
         {
-            var result = await DatabaseData.Image.Find(new BsonDocument("UserId", id)).ToListAsync();
+            var result = await DatabaseData.Pictires.Find(new BsonDocument("UserId", id)).ToListAsync();
             return result;
         }
 
-        public async Task<IEnumerable<Image>> GetAllItemsFromDatabase()
+        public async Task<IEnumerable<Picture>> GetAllItemsFromDatabase()
         {
-            var resullt = await DatabaseData.Image.Find(new BsonDocument()).ToListAsync();
+            var resullt = await DatabaseData.Pictires.Find(new BsonDocument()).ToListAsync();
             return resullt;
         }
 
-        public Task<IEnumerable<Image>> GetAllItemsFromFolder(string id)
+        public async Task<IEnumerable<Picture>> GetAllItemsFromFolder(string id)
+        {
+            var result = await DatabaseData.Pictires.Find(new BsonDocument("NoteId", id)).ToListAsync();
+            return result;
+        }
+
+        public Task Update(string id, Picture item)
         {
             throw new NotImplementedException();
         }
 
-        public Task Update(string id, Image item)
+        public async Task Delete(string id)
         {
-            throw new NotImplementedException();
-        }
-
-        public Task Delete(string id)
-        {
-            throw new NotImplementedException();
+            await DatabaseData.Pictires.DeleteManyAsync(new BsonDocument("NoteId", id));
         }
     }
 }

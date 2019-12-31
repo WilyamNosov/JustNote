@@ -16,12 +16,14 @@ namespace JustNotes.Controllers
     public class NoteController : Controller
     {
         private IDatabaseItemService<Note> _noteService;
+        private IDatabaseItemService<Picture> _pictureService;
         private TokenManagerService _tokenManagerService;
 
-        public NoteController(TokenManagerService tokenManagerService, IDatabaseItemService<Note> noteService)
+        public NoteController(TokenManagerService tokenManagerService, IDatabaseItemService<Note> noteService, IDatabaseItemService<Picture> pictureService)
         {
             _tokenManagerService = tokenManagerService;
             _noteService = noteService;
+            _pictureService = pictureService;
         }
 
         [JustNotesAuthorize]
@@ -33,32 +35,66 @@ namespace JustNotes.Controllers
 
         [JustNotesAuthorize]
         [HttpPost]
-        public async Task<IActionResult> Post(string token, [FromBody] Note note)
+        public async Task<IActionResult> Post(string token, [FromBody] IEnumerable<Object> inputData)
         {
+            var note = JObject.FromObject(inputData.ElementAt(0)).ToObject<Note>();
+            var inputPicturesArray = JArray.FromObject(inputData.ElementAt(1)).ToObject<List<string>>();
             note.NoteDate = DateTime.Now;
             note.UserId = _tokenManagerService.User.Id;
+            var pictureArray = new List<Picture>();
+
+            foreach(var inputPicture in inputPicturesArray)
+            {
+                pictureArray.Add(new Picture() { ImageCode = inputPicture, NoteId = note.LocalId, UserId = _tokenManagerService.User.Id });
+            }
 
             await _noteService.Create(note);
+            await _pictureService.CreateManyItems(pictureArray);
+
             return Ok();
         }
 
         [JustNotesAuthorize]
         [HttpPost("{id}")]
-        public async Task<IActionResult> Post(string id, string token, [FromBody] Note note)
+        public async Task<IActionResult> Post(string id, string token, [FromBody] IEnumerable<Object> inputData)
         {
+            var note = JObject.FromObject(inputData.ElementAt(0)).ToObject<Note>();
+            var inputPicturesArray = JArray.FromObject(inputData.ElementAt(1)).ToObject<List<string>>();
             note.NoteDate = DateTime.Now;
             note.UserId = _tokenManagerService.User.Id;
-            note.FolderId = id.ToString();
+            note.FolderId = id;
+            var pictureArray = new List<Picture>();
+
+            foreach (var inputPicture in inputPicturesArray)
+            {
+                pictureArray.Add(new Picture() { ImageCode = inputPicture, NoteId = note.LocalId, UserId = _tokenManagerService.User.Id });
+            }
 
             await _noteService.Create(note);
+            await _pictureService.CreateManyItems(pictureArray);
+
             return Ok();
         }
 
         [JustNotesAuthorize]
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(string token, string id, [FromBody] Note note)
+        public async Task<IActionResult> Put(string token, string id, [FromBody] IEnumerable<Object> inputData)
         {
+            var note = JObject.FromObject(inputData.ElementAt(0)).ToObject<Note>();
+            var inputPicturesArray = JArray.FromObject(inputData.ElementAt(1)).ToObject<List<string>>();
+            note.NoteDate = DateTime.Now;
+            note.UserId = _tokenManagerService.User.Id;
+            var pictureArray = new List<Picture>();
+
+            foreach (var inputPicture in inputPicturesArray)
+            {
+                pictureArray.Add(new Picture() { ImageCode = inputPicture, NoteId = note.LocalId, UserId = _tokenManagerService.User.Id });
+            }
+
             await _noteService.Update(id, note);
+            await _pictureService.Delete(id);
+            await _pictureService.CreateManyItems(pictureArray);
+
             return Ok();
         }
 

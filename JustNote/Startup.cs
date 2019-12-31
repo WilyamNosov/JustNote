@@ -50,6 +50,7 @@ namespace JustNote
             services.AddScoped<IDatabaseItemService<Folder>, FolderService>();
             services.AddScoped<IDatabaseItemService<SharedNote>, SharedNotesService>();
             services.AddScoped<IDatabaseItemService<SharedFolder>, SharedFoldersService>();
+            services.AddScoped<IDatabaseItemService<Picture>, ImageService>();
             services.AddScoped<IDatabaseItemService<User>, UzverService>();
 
             services.AddAWSService<Amazon.S3.IAmazonS3>();

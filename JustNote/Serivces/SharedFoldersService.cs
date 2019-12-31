@@ -46,6 +46,11 @@ namespace JustNote.Serivces
             await ShareNotesFromFolder(item);
         }
 
+        public Task CreateManyItems(List<SharedFolder> items)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<SharedFolder> Get(string id)
         {
             var result = await DatabaseData.SharedFolders.Find(new BsonDocument("_id", new ObjectId(id))).FirstOrDefaultAsync();

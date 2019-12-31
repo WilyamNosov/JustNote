@@ -8,20 +8,17 @@ using System.Threading.Tasks;
 
 namespace JustNote.Models
 {
-    public class Image
+    public class Picture
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         [JsonProperty("id")]
         public string Id { get; set; }
-        [JsonProperty("imageName")]
-        public string ImageName { get; set; }
         [JsonProperty("imageCode")]
         public string ImageCode { get; set; }
-        [JsonProperty("localId")]
-        public string LocalId { get; set; }
         [JsonProperty("noteId")]
         public string NoteId { get; set; }
+        [BsonRepresentation(BsonType.ObjectId)]
         [JsonProperty("userId")]
         public string UserId { get; set; }
     }

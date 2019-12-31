@@ -122,5 +122,10 @@ namespace JustNote.Serivces
 
             return false;
         }
+
+        public Task CreateManyItems(List<User> items)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

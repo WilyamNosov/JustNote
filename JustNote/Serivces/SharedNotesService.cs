@@ -35,6 +35,11 @@ namespace JustNote.Serivces
             }
         }
 
+        public Task CreateManyItems(List<SharedNote> items)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<SharedNote> Get(string id)
         {
             return await DatabaseData.SharedNotes.Find(new BsonDocument("_id", new ObjectId(id))).FirstAsync();

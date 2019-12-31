@@ -8,6 +8,7 @@ namespace JustNote.Serivces
     public interface IDatabaseItemService<T>
     {
         Task Create(T item);
+        Task CreateManyItems(List<T> items);
         Task<T> Get(string id);
         Task<IEnumerable<T>> GetAllItems(string id); //user id
         Task<IEnumerable<T>> GetAllItemsFromFolder(string id); //folder id

@@ -32,6 +32,11 @@ namespace JustNote.Serivces
             }
         }
 
+        public async Task CreateManyItems(List<Note> items)
+        {
+            await DatabaseData.Notes.InsertManyAsync(items);
+        }
+
         public async Task<Note> Get(string id)
         {
             return await DatabaseData.Notes.Find(new BsonDocument("LocalId", id)).FirstOrDefaultAsync();

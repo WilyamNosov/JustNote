@@ -19,14 +19,16 @@ namespace JustNotes.Controllers
     {
 
         private TokenManagerService _tokenManagerService;
+        private IDatabaseItemService<Picture> _pictureService;
         private IDatabaseItemService<Folder> _folderService;
         private IDatabaseItemService<Note> _noteService;
 
-        public FolderController(TokenManagerService tokenManagerService, IDatabaseItemService<Folder> folderService, IDatabaseItemService<Note> noteService)
+        public FolderController(TokenManagerService tokenManagerService, IDatabaseItemService<Folder> folderService, IDatabaseItemService<Note> noteService, IDatabaseItemService<Picture> pictureService)
         {
             _tokenManagerService = tokenManagerService;
             _folderService = folderService;
             _noteService = noteService;
+            _pictureService = pictureService;
         }
 
         [JustNotesAuthorize]
@@ -62,46 +64,50 @@ namespace JustNotes.Controllers
         }
         [JustNotesAuthorize]
         [HttpPost("Synchronize")]
-        public async Task<IActionResult> Synchronize(string token, [FromBody] Object items)
+        public async Task<IActionResult> Synchronize(string token, [FromBody] IEnumerable<Object> items)
         {
-            var foldersList = new List<Folder>();
-            var notesList = new List<Note>();
-            var jsonArray = new JArray(items).ElementAt(0);
-            var folder = new Folder();
-            var note = new Note();
+            var pictureArray = new List<Picture>();
 
-            for (int i = 0; i < jsonArray.Count(); i++)
+            var folders = JArray.FromObject(items.ElementAt(0)).ToObject<List<Folder>>();
+            var notes = JArray.FromObject(items.ElementAt(1)).ToObject<List<Note>>();
+            var images = JArray.FromObject(items.ElementAt(2)).ToObject<List<Object>>();
+
+            foreach(var folder in folders)
             {
-                var item = jsonArray.ElementAt(i);
+                folder.UserId = _tokenManagerService.User.Id;
+            }
+            foreach (var note in notes)
+            {
+                note.UserId = _tokenManagerService.User.Id;
+            }
 
-                folder = item.ToObject<Folder>();
-                if (folder.FolderName != null)
+            for (int i = 0; i < images.Count; i++)
+            {
+                var noteId = JObject.Parse(images.ElementAt(i).ToString()).Value<string>("id");
+                var imageArray = JObject.Parse(images.ElementAt(i).ToString()).Value<Object>("imageArray");
+                var noteImages = JArray.FromObject(imageArray).ToObject<List<string>>();
+
+                foreach (var noteImage in noteImages)
                 {
-                    folder.UserId = _tokenManagerService.User.Id;
-                    foldersList.Add(folder);
-                } else
-                {
-                    note = item.ToObject<Note>();
-                    note.UserId = _tokenManagerService.User.Id;
-                    notesList.Add(note);
+                    pictureArray.Add(new Picture() { ImageCode = noteImage, NoteId = noteId, UserId = _tokenManagerService.User.Id });
                 }
             }
 
-
-            // move to services
-            var curentFolders = await _folderService.GetAllItems(_tokenManagerService.User.Id);
-            var curentNotes = await _noteService.GetAllItems(_tokenManagerService.User.Id);
-
             await DatabaseData.Folders.DeleteManyAsync(new BsonDocument("UserId", new ObjectId(_tokenManagerService.User.Id)));
             await DatabaseData.Notes.DeleteManyAsync(new BsonDocument("UserId", new ObjectId(_tokenManagerService.User.Id)));
-
-            if (foldersList.Count > 0)
+            await DatabaseData.Pictires.DeleteManyAsync(new BsonDocument("UserId", new ObjectId(_tokenManagerService.User.Id)));
+            
+            if (folders.Count > 0)
             {
-                await DatabaseData.Folders.InsertManyAsync(foldersList);
+                await _folderService.CreateManyItems(folders);
             }
-            if (notesList.Count > 0)
+            if (notes.Count > 0)
             {
-                await DatabaseData.Notes.InsertManyAsync(notesList);
+                await _noteService.CreateManyItems(notes);
+            }
+            if (pictureArray.Count > 0)
+            {
+                await _pictureService.CreateManyItems(pictureArray);
             }
 
             return Ok();

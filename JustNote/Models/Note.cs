@@ -31,6 +31,6 @@ namespace JustNote.Models
         [JsonProperty("role")]
         public string Role { get; set; }
         [JsonProperty("imageArray")]
-        public List<string> ImageArray { get; set; }
+        public string ImageArray { get; set; }
     }
 }

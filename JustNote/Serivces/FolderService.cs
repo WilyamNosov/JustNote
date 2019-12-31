@@ -25,6 +25,11 @@ namespace JustNote.Serivces
             await DatabaseData.Folders.InsertOneAsync(item);
         }
 
+        public async Task CreateManyItems(List<Folder> items)
+        {
+             await DatabaseData.Folders.InsertManyAsync(items);
+        }
+
         public async Task<Folder> Get(string id)
         {
             if (!String.IsNullOrWhiteSpace(id))

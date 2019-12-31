@@ -46,9 +46,9 @@ namespace JustNote.Datas
         {
             get { return Database.GetCollection<SharedNote>("availablenote"); }
         }
-        public static IMongoCollection<Image> Image
+        public static IMongoCollection<Picture> Pictires
         {
-            get { return Database.GetCollection<Image>("image"); }
+            get { return Database.GetCollection<Picture>("image"); }
         }
     }
 }

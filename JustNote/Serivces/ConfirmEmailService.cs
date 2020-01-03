@@ -26,12 +26,18 @@ namespace JustNote.Serivces
             };
 
             using (SmtpClient client = new SmtpClient())
-            {
-                await client.ConnectAsync("smtp.gmail.com", 465, true);
-                await client.AuthenticateAsync("justnotemain@gmail.com", "Pa$$w0Rd");
-                await client.SendAsync(emailMessage);
+            {   try
+                {
+                    await client.ConnectAsync("in-v3.mailjet.com", 465, true);
+                    await client.AuthenticateAsync("0bff859eb124cb7864c89f4249f50926", "4b1fad7f175f3e02d89bd0472bbf8745");
+                    await client.SendAsync(emailMessage);
 
-                await client.DisconnectAsync(true);
+
+                    await client.DisconnectAsync(true);
+                } catch (Exception ex)
+                {
+                    var exception = ex.Message;
+                }
             }
         }
         public async Task<string> AcceptConfirmMessage(string token)

@@ -66,7 +66,6 @@ namespace JustNote.Serivces
                 {
                     return false;
                 }
-
                 return true;
             }
             catch

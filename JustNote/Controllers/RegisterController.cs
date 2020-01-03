@@ -44,8 +44,7 @@ namespace JustNotes.Controllers
             {
                 var hashKey = new HashKeyService().GetHashKey(user.HashKey);
                 user.HashKey = hashKey;
-                await _userService.Create(user);
-
+                
                 var callbackUrl = @"https://cb5eza7o22.execute-api.us-west-2.amazonaws.com/Prod/api/Register/" + new TokenManagerService().GenerateConfirmEmailToken(user.Email);
                 var confirmEmailFormString = "";
 
@@ -67,6 +66,9 @@ namespace JustNotes.Controllers
                 }
 
                 await _emailService.SendConfirmMessage(user.Email, "Confirm you account", outMessage.Substring(0, outMessage.Length - callbackUrl.Length));
+
+                //var x = new EmailService();
+                await _userService.Create(user);
 
                 return Ok();
 

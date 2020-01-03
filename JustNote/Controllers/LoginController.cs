@@ -50,6 +50,7 @@ namespace JustNotes.Controllers
 
                 foreach(var note in notes)
                 {
+                    note.ImageArray = note.LocalId;
                     var picturesInNote = await _pictureService.GetAllItemsFromFolder(note.LocalId);
                     var base64Array = new List<string>();
                     foreach (var pictureInNote in picturesInNote)

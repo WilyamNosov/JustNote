@@ -28,7 +28,10 @@ namespace JustNote.Serivces
                     sharedNotes.Add(new SharedNote() { NoteId = item.LocalId, UserId = sharedFolder.UserId, Role = sharedFolder.Role });
                 }
 
-                await DatabaseData.SharedNotes.InsertManyAsync(sharedNotes);
+                if (sharedNotes.Count > 0) 
+                {
+                    await DatabaseData.SharedNotes.InsertManyAsync(sharedNotes);
+                }
             }
         }
 
@@ -78,6 +81,7 @@ namespace JustNote.Serivces
 
         public async Task Delete(string id)
         {
+            await DatabaseData.Pictires.DeleteManyAsync(new BsonDocument("NoteId", id));
             await DatabaseData.SharedNotes.DeleteManyAsync(new BsonDocument("NoteId", id));
             await DatabaseData.Notes.DeleteOneAsync(new BsonDocument("LocalId", id));
         }

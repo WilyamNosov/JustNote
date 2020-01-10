@@ -41,6 +41,7 @@ namespace JustNote.Serivces
 
         public async Task<IEnumerable<Picture>> GetAllItemsFromFolder(string id)
         {
+            //FromNote
             var result = await DatabaseData.Pictires.Find(new BsonDocument("NoteId", id)).ToListAsync();
             return result;
         }

@@ -26,6 +26,23 @@ namespace JustNotes.Controllers
             _pictureService = pictureService;
         }
 
+        [HttpGet("Site/{id}")]
+        public async Task<IActionResult> GetForSite(string id)
+        {
+            var note = await _noteService.Get(id);
+            var images = await _pictureService.GetAllItemsFromFolder(id);
+            var pictures = new List<string>();
+            
+            foreach(var image in images)
+            {
+                pictures.Add(image.ImageCode);
+            }
+            
+            var result = new List<object>() { Json(note).Value, Json(pictures).Value };
+            return Ok(result);
+
+        }
+
         [JustNotesAuthorize]
         [HttpGet("{id}")]
         public async Task<Note> Get(string id, string token)
@@ -83,6 +100,7 @@ namespace JustNotes.Controllers
             var note = JObject.FromObject(inputData.ElementAt(0)).ToObject<Note>();
             var inputPicturesArray = JArray.FromObject(inputData.ElementAt(1)).ToObject<List<string>>();
             note.NoteDate = DateTime.Now;
+            note.LocalId = id;
             note.UserId = _tokenManagerService.User.Id;
             var pictureArray = new List<Picture>();
 

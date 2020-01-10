@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Net;
+using System.Threading.Tasks;
 using RestSharp;
 using RestSharp.Authenticators;
 
@@ -7,30 +9,37 @@ namespace JustNote.Serivces
 {
     public class EmailService
     {
+        private ConfirmEmailService _emailService = new ConfirmEmailService();
+
         public EmailService()
         {
-            var x = SendSimpleMessage().Content.ToString();
+
         }
-
-        public static IRestResponse SendSimpleMessage()
+        public async Task<bool> ShareItemMessageBuild(string senderEmail, string getterEmail, string itemId)
         {
-            RestClient client = new RestClient();
-            client.BaseUrl = new Uri("https://api.mailgun.net/v3");
+            var callbackUrl = @"http://localhost:3000/?id=" + itemId;
+            var confirmEmailFormString = "";
 
-            client.Authenticator =
+            var page = @"https://justnoteservices3bucket.s3-us-west-2.amazonaws.com/ShareNoteForm.html";
 
-            new HttpBasicAuthenticator("api",
-                "439856d912c64fa6659091a365f8663a-6f4beb0a-b7065b99");
-            RestRequest request = new RestRequest();
-            request.AddParameter("domain", "sandboxe29a95d0c9b14cd8b8405ba485563461.mailgun.org", ParameterType.UrlSegment);
-            request.Resource = "{domain}/messages";
-            request.AddParameter("from", "Excited User <mailgun@sandboxe29a95d0c9b14cd8b8405ba485563461.mailgun.org>");
-            request.AddParameter("to", "justnotemain@gmail.com");
-            request.AddParameter("to", "YOU@sandboxe29a95d0c9b14cd8b8405ba485563461.mailgun.org");
-            request.AddParameter("subject", "Hello");
-            request.AddParameter("text", "Testing some Mailgun awesomness!");
-            request.Method = Method.POST;
-            return client.Execute(request);
+            var webRequest = WebRequest.Create(page);
+
+            var response = webRequest.GetResponse();
+            var content = response.GetResponseStream();
+            using (var reader = new System.IO.StreamReader(content))
+            {
+                confirmEmailFormString = reader.ReadToEnd();
+            }
+
+            var outMessage = confirmEmailFormString.Split('|')[0] + senderEmail;
+            foreach (var partOfMessage in confirmEmailFormString.Split('|')[1].Split('@'))
+            {
+                outMessage += partOfMessage + callbackUrl;
+            }
+
+            await _emailService.SendConfirmMessage(getterEmail, "Share note", outMessage.Substring(0, outMessage.Length - callbackUrl.Length));
+
+            return true;
         }
     }
 }

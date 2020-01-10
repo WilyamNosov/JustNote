@@ -18,16 +18,19 @@ namespace JustNote.Controllers
         private IDatabaseItemService<Note> _noteService;
         private IDatabaseItemService<SharedFolder> _sharedFolderService;
         private IDatabaseItemService<SharedNote> _sharedNoteService;
+        private IDatabaseItemService<Picture> _pictureService;
         private IDatabaseItemService<User> _userService;
 
         public SharedController(TokenManagerService tokenManagerService, IDatabaseItemService<Folder> folderService, IDatabaseItemService<Note> noteService,
-            IDatabaseItemService<SharedFolder> sharedFolderService, IDatabaseItemService<SharedNote> sharedNoteService, IDatabaseItemService<User> userService)
+            IDatabaseItemService<SharedFolder> sharedFolderService, IDatabaseItemService<SharedNote> sharedNoteService, IDatabaseItemService<User> userService,
+            IDatabaseItemService<Picture> pictureService)
         {
             _tokenManagerService = tokenManagerService;
             _folderService = folderService;
             _noteService = noteService;
             _sharedFolderService = sharedFolderService;
             _sharedNoteService = sharedNoteService;
+            _pictureService = pictureService;
             _userService = userService;
         }
 
@@ -77,11 +80,37 @@ namespace JustNote.Controllers
                 result.Add(Json(notesResult).Value);
                 return Ok(result);
             }
-            catch (Exception ex)
+            catch
             {
-                var x = ex.Message;
                 return BadRequest();
             }
+        }
+
+        [JustNotesAuthorize]
+        [HttpGet("Note/{id}")]
+        public async Task<IActionResult> GetSharedNote(string id, string token)
+        {
+            var user = await _userService.Get(_tokenManagerService.User.Id);
+            var sharedNotes = await _sharedNoteService.GetAllItems(user.Id);
+            var note = await _noteService.Get(id);
+            var pictures = await _pictureService.GetAllItemsFromFolder(id);
+            var picturesResult = new List<string>();
+
+            foreach (var sharedNote in sharedNotes)
+            {
+                if (sharedNote.NoteId == note.LocalId)
+                {
+                    note.Role = sharedNote.Role;
+                }
+            }
+            foreach (var picture in pictures)
+            {
+                picturesResult.Add(picture.ImageCode);
+            }
+
+            var result = new List<object>() { Json(note).Value, Json(picturesResult).Value };
+
+            return Ok(result);
         }
 
         [JustNotesAuthorize]
@@ -184,7 +213,12 @@ namespace JustNote.Controllers
             }
             catch
             {
-                return BadRequest();
+                var senderEmai = _tokenManagerService.User.Email;
+                var setterEmail = JObject.Parse(inputValue.ToString()).Value<String>("UserEmail");
+                var emailService = new EmailService();
+                var result = await emailService.ShareItemMessageBuild(senderEmai, setterEmail, id);
+
+                return Ok(result);
             }
         }
     }

@@ -67,7 +67,6 @@ namespace JustNotes.Controllers
 
                 await _emailService.SendConfirmMessage(user.Email, "Confirm you account", outMessage.Substring(0, outMessage.Length - callbackUrl.Length));
 
-                //var x = new EmailService();
                 await _userService.Create(user);
 
                 return Ok();

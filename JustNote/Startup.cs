@@ -39,7 +39,8 @@ namespace JustNote
                 builder =>
                 {
                     builder.WithOrigins("http://justnote-test.us-west-2.elasticbeanstalk.com/", 
-                        "https://cb5eza7o22.execute-api.us-west-2.amazonaws.com/Prod")
+                        "https://cb5eza7o22.execute-api.us-west-2.amazonaws.com/Prod",
+                        "http://localhost:3000")
                         .AllowAnyHeader()
                         .AllowAnyMethod();
                 });

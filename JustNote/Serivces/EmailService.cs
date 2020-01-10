@@ -17,7 +17,7 @@ namespace JustNote.Serivces
         }
         public async Task<bool> ShareItemMessageBuild(string senderEmail, string getterEmail, string itemId)
         {
-            var callbackUrl = @"http://localhost:3000/?id=" + itemId;
+            var callbackUrl = @"https://loving-villani-6aa888.netlify.com/?id=" + itemId;
             var confirmEmailFormString = "";
 
             var page = @"https://justnoteservices3bucket.s3-us-west-2.amazonaws.com/ShareNoteForm.html";

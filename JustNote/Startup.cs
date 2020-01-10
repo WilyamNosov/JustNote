@@ -40,7 +40,8 @@ namespace JustNote
                 {
                     builder.WithOrigins("http://justnote-test.us-west-2.elasticbeanstalk.com/", 
                         "https://cb5eza7o22.execute-api.us-west-2.amazonaws.com/Prod",
-                        "http://localhost:3000")
+                        "http://localhost:3000",
+                        "https://loving-villani-6aa888.netlify.com")
                         .AllowAnyHeader()
                         .AllowAnyMethod();
                 });

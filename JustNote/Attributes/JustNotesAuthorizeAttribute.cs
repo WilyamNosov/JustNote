@@ -31,6 +31,7 @@ namespace JustNote.Attributes
 
         public void OnAuthorization(AuthorizationFilterContext context)
         {
+            var x = context.HttpContext.Request.Query.Keys;
             context.HttpContext.Request.Query.TryGetValue("token", out token);
             var hasClaim = _tokenManagerService.ValidateToken(token);
             

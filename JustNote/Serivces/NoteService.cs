@@ -1,5 +1,7 @@
-﻿using JustNote.Datas;
+﻿using JustNote.Attributes;
+using JustNote.Datas;
 using JustNote.Models;
+using JustNotes.Services;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Newtonsoft.Json.Linq;
@@ -10,11 +12,13 @@ using System.Threading.Tasks;
 
 namespace JustNote.Serivces
 {
-    public class NoteService : DatabaseData
+    public class NoteService : IDatabaseItemService<Note>
     {
-        public NoteService() : base()
+        public async Task Create(Note item)
         {
+            await DatabaseData.Notes.InsertOneAsync(item);
 
+<<<<<<< HEAD
         }
         public async Task CreateNote(Note note)
         {
@@ -28,24 +32,52 @@ namespace JustNote.Serivces
                 foreach (AvailableFolder accessFolder in accessFolders)
                 {
                     await accessService.CreateNewNoteAccess(accessFolder.UserId, note.Id, accessFolder.Role);
+=======
+            if (item.FolderId != null)
+            {
+                var sharedFolders = await DatabaseData.SharedFolders.Find(new BsonDocument("FolderId", item.FolderId)).ToListAsync();
+                var sharedNotes = new List<SharedNote>();
+
+                foreach (var sharedFolder in sharedFolders)
+                {
+                    sharedNotes.Add(new SharedNote() { NoteId = item.LocalId, UserId = sharedFolder.UserId, Role = sharedFolder.Role });
+                }
+
+                if (sharedNotes.Count > 0) 
+                {
+                    await DatabaseData.SharedNotes.InsertManyAsync(sharedNotes);
+>>>>>>> DatabaseData
                 }
             }
         }
-        public async Task<Note> GetNote(string id)
+
+        public async Task CreateManyItems(List<Note> items)
         {
-            return await Notes.Find(new BsonDocument("_id", new ObjectId(id))).FirstOrDefaultAsync();
+            await DatabaseData.Notes.InsertManyAsync(items);
         }
-        public async Task<IEnumerable<Note>> GetAllUserNotes(string userId)
+
+        public async Task<Note> Get(string id)
         {
+<<<<<<< HEAD
             if (String.IsNullOrWhiteSpace(userId))
                 return null;
 
             FilterDefinition<Note> filter = FilterService<Note>.GetFilterByOneParam("UserId", new ObjectId(userId));
-
-            return await Notes.Find(filter).ToListAsync();
+=======
+            return await DatabaseData.Notes.Find(new BsonDocument("LocalId", id)).FirstOrDefaultAsync();
         }
-        public async Task<IEnumerable<Note>> GetAllNotesFromFolder(string parentFolderId)
+
+        public async Task<IEnumerable<Note>> GetAllItems(string id)
         {
+            var filter = FilterService<Note>.GetFilterByOneParam("UserId", new ObjectId(id));
+            var result = await DatabaseData.Notes.Find(filter).ToListAsync();
+>>>>>>> DatabaseData
+
+            return result;
+        }
+        public async Task<IEnumerable<Note>> GetAllItemsFromFolder(string id)
+        {
+<<<<<<< HEAD
             if (String.IsNullOrWhiteSpace(parentFolderId))
                 return null;
 
@@ -60,12 +92,38 @@ namespace JustNote.Serivces
             note.UserId = oldNote.UserId;
             note.NoteDate = DateTime.Now;
             note.FolderId = oldNote.FolderId;
+=======
+            var filter = FilterService<Note>.GetFilterByOneParam("FolderId", id);
+            var result = await DatabaseData.Notes.Find(filter).ToListAsync();
 
-            await Notes.ReplaceOneAsync(new BsonDocument("_id", new ObjectId(noteId)), note);
+            return result;
         }
-        public async Task DeleteNote(string noteId)
+        public async Task<IEnumerable<Note>> GetAllItemsFromDatabase()
         {
-            await Notes.DeleteOneAsync(new BsonDocument("_id", new ObjectId(noteId)));
+            var result = await DatabaseData.Notes.Find(new BsonDocument()).ToListAsync();
+
+            return result;
+        }
+
+        public async Task Update(string id, Note item)
+        {
+            Note oldNote = await Get(id);
+>>>>>>> DatabaseData
+
+            item.Id = oldNote.Id;
+            item.UserId = oldNote.UserId;
+            item.NoteDate = DateTime.Now;
+            item.FolderId = oldNote.FolderId;
+            item.LocalId = oldNote.LocalId;
+
+            await DatabaseData.Notes.ReplaceOneAsync(new BsonDocument("LocalId", id), item);
+        }
+
+        public async Task Delete(string id)
+        {
+            await DatabaseData.Pictires.DeleteManyAsync(new BsonDocument("NoteId", id));
+            await DatabaseData.SharedNotes.DeleteManyAsync(new BsonDocument("NoteId", id));
+            await DatabaseData.Notes.DeleteOneAsync(new BsonDocument("LocalId", id));
         }
         //public async Task<IEnumerable<Note>> GetNoteBySearchString(string searchString)
         //{

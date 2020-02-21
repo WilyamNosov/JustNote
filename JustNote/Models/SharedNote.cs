@@ -8,34 +8,23 @@ using System.Threading.Tasks;
 
 namespace JustNote.Models
 {
-    public class Note
+    public class SharedNote
     {
+
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         [JsonProperty("id")]
         public string Id { get; set; }
-        [JsonProperty("name")]
-        public string Name { get; set; }
-        [JsonProperty("content")]
-        public string Content { get; set; }
-        [JsonProperty("noteDate")]
-        public DateTime NoteDate { get; set; }
         [BsonRepresentation(BsonType.ObjectId)]
         [JsonProperty("userId")]
         public string UserId { get; set; }
-<<<<<<< HEAD
+<<<<<<< HEAD:JustNote/Models/AvailableNote.cs
         [BsonRepresentation(BsonType.ObjectId)]
-        [JsonProperty("folderId")]
+        [JsonProperty("noteId")]
 =======
-        [JsonProperty("inFolder")]
->>>>>>> DatabaseData
-        public string FolderId { get; set; }
-        [JsonProperty("localId")]
-        public string LocalId { get; set; }
-        [BsonIgnoreIfNull]
+>>>>>>> DatabaseData:JustNote/Models/SharedNote.cs
+        public string NoteId { get; set; }
         [JsonProperty("role")]
         public string Role { get; set; }
-        [JsonProperty("imageArray")]
-        public string ImageArray { get; set; }
     }
 }

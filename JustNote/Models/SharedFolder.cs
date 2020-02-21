@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace JustNote.Models
 {
-    public class AvailableFolder
+    public class SharedFolder
     {
 
         [BsonId]
@@ -18,8 +18,11 @@ namespace JustNote.Models
         [BsonRepresentation(BsonType.ObjectId)]
         [JsonProperty("userId")]
         public string UserId { get; set; }
+<<<<<<< HEAD:JustNote/Models/AvailableFolder.cs
         [BsonRepresentation(BsonType.ObjectId)]
         [JsonProperty("folderId")]
+=======
+>>>>>>> DatabaseData:JustNote/Models/SharedFolder.cs
         public string FolderId { get; set; }
         [JsonProperty("role")]
         public string Role { get; set; }

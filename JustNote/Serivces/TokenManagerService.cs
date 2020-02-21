@@ -13,11 +13,14 @@ namespace JustNote.Serivces
 {
     public class TokenManagerService
     {
-        private static string Secret = "XCAP05H6LoKvbRRa/QkqLNMI7cOHguaRyHzyg7n5qEkGjQmtBhz4SzYh4Fqwjyi3KJHlSXKPwVu2+bXr6CtpgQ==";
+        private static string _secret = "XCAP05H6LoKvbRRa/QkqLNMI7cOHguaRyHzyg7n5qEkGjQmtBhz4SzYh4Fqwjyi3KJHlSXKPwVu2+bXr6CtpgQ==";
+        public string UserName { get; set; }
+        public string UserHashKey { get; set; }
+        public User User { get; set; }
 
         public string GenerateToken(string username, string hashkey)
         {
-            byte[] key = Convert.FromBase64String(Secret);
+            byte[] key = Convert.FromBase64String(_secret);
             SymmetricSecurityKey securityKey = new SymmetricSecurityKey(key);
             SecurityTokenDescriptor descriptor = new SecurityTokenDescriptor
             {
@@ -32,10 +35,10 @@ namespace JustNote.Serivces
             JwtSecurityToken token = handler.CreateJwtSecurityToken(descriptor);
             return handler.WriteToken(token);
         }
-        public bool ValidateToken(string token, out string username, out string hashkey)
+        public bool ValidateToken(string token)
         {
-            username = null;
-            hashkey = null;
+            UserName = null;
+            UserHashKey = null;
 
             ClaimsPrincipal simplePrinciple = GetPrincipal(token);
 
@@ -44,23 +47,28 @@ namespace JustNote.Serivces
                 ClaimsIdentity identity = simplePrinciple.Identity as ClaimsIdentity;
 
                 if (identity == null)
+                {
                     return false;
+                }
 
                 if (!identity.IsAuthenticated)
+                {
                     return false;
+                }
 
+                
                 Claim usernameClaim = identity.FindFirst(ClaimTypes.Name);
-                Claim hashkeyClaim = identity.FindFirst(ClaimTypes.Hash);
+                Claim hashkeyClaim  = identity.FindFirst(ClaimTypes.Hash);
 
-                username = usernameClaim?.Value;
-                hashkey = hashkeyClaim?.Value;
+                User = new UzverService().GetUser(usernameClaim?.Value, hashkeyClaim?.Value).GetAwaiter().GetResult();
 
-                if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(hashkey))
+                if (User == null)
+                {
                     return false;
-
+                }
                 return true;
-
-            } catch
+            }
+            catch
             {
                 return false;
             }
@@ -75,7 +83,7 @@ namespace JustNote.Serivces
                 if (jwtToken == null)
                     return null;
 
-                byte[] symmetricKey = Convert.FromBase64String(Secret);
+                byte[] symmetricKey = Convert.FromBase64String(_secret);
 
                 TokenValidationParameters validationParameters = new TokenValidationParameters()
                 {
@@ -98,8 +106,14 @@ namespace JustNote.Serivces
 
         public string GenerateConfirmEmailToken(string userEmail)
         {
+<<<<<<< HEAD
             byte[] key = Convert.FromBase64String(Secret);
             SymmetricSecurityKey securityKey = new SymmetricSecurityKey(key);
+=======
+            byte[] key = Convert.FromBase64String(_secret);
+            SymmetricSecurityKey securityKey = new SymmetricSecurityKey(key);
+            
+>>>>>>> DatabaseData
             SecurityTokenDescriptor descriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[] {
@@ -109,6 +123,10 @@ namespace JustNote.Serivces
                 SigningCredentials = new SigningCredentials(securityKey,
                 SecurityAlgorithms.HmacSha256Signature)
             };
+<<<<<<< HEAD
+=======
+
+>>>>>>> DatabaseData
             JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
             JwtSecurityToken token = handler.CreateJwtSecurityToken(descriptor);
             return handler.WriteToken(token);
@@ -116,7 +134,11 @@ namespace JustNote.Serivces
         public bool ValidateConfirmEmailToken(string token, out string email)
         {
             email = null;
+<<<<<<< HEAD
             
+=======
+
+>>>>>>> DatabaseData
             ClaimsPrincipal simplePrinciple = GetPrincipal(token);
 
             try
@@ -130,9 +152,15 @@ namespace JustNote.Serivces
                     return false;
 
                 Claim emailClaim = identity.FindFirst(ClaimTypes.Email);
+<<<<<<< HEAD
                 
                 email = emailClaim?.Value;
                 
+=======
+
+                email = emailClaim?.Value;
+
+>>>>>>> DatabaseData
                 if (string.IsNullOrEmpty(email))
                     return false;
 

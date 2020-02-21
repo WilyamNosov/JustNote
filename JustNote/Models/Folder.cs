@@ -21,8 +21,15 @@ namespace JustNote.Models
         [BsonRepresentation(BsonType.ObjectId)]
         [JsonProperty("userId")]
         public string UserId { get; set; }
+<<<<<<< HEAD
         [BsonRepresentation(BsonType.ObjectId)]
         [JsonProperty("parentFolderId")]
         public string ParentFolderId { get; set; }
+=======
+        [JsonProperty("localId")]
+        public string LocalId { get; set; }
+        [BsonIgnoreIfNull]
+        public string Role { get; set; }
+>>>>>>> DatabaseData
     }
 }

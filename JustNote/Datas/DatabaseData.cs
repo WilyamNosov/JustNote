@@ -7,49 +7,48 @@ using System.Threading.Tasks;
 
 namespace JustNote.Datas
 {
-    public class DatabaseData
+    public static class DatabaseData
     {
 
-        //private string connect = "mongodb://localhost:27017";
         private static string connect = "mongodb+srv://DeadApolon:Pa$$w0Rd@cluster0-pdwof.mongodb.net/test?retryWrites=true&w=majority";
         private static MongoClient client;
-        
+
         private static IMongoDatabase database;
-        public DatabaseData()
+        static DatabaseData()
         {
             client = new MongoClient(connect);
             database = client.GetDatabase("JustNote");
         }
-        public IMongoDatabase Database
+        public static IMongoDatabase Database
         {
             get
             {
                 return database;
             }
         }
-        public IMongoCollection<User> Users
+        public static IMongoCollection<User> Users
         {
             get { return Database.GetCollection<User>("user"); }
         }
-        public IMongoCollection<Folder> Folders
+        public static IMongoCollection<Folder> Folders
         {
             get { return Database.GetCollection<Folder>("folder"); }
         }
-        public IMongoCollection<Note> Notes
+        public static IMongoCollection<Note> Notes
         {
             get { return Database.GetCollection<Note>("note"); }
         }
-        public IMongoCollection<AvailableNote> AvailableNotes
+        public static IMongoCollection<SharedFolder> SharedFolders
         {
-            get { return Database.GetCollection<AvailableNote>("availablenote"); }
+            get { return Database.GetCollection<SharedFolder>("availablefolder"); }
         }
-        public IMongoCollection<AvailableFolder> AccessFolders
+        public static IMongoCollection<SharedNote> SharedNotes
         {
-            get { return Database.GetCollection<AvailableFolder>("availablefolder"); }
+            get { return Database.GetCollection<SharedNote>("availablenote"); }
         }
-        public IMongoCollection<AvailableNote> AccessNotes
+        public static IMongoCollection<Picture> Pictires
         {
-            get { return Database.GetCollection<AvailableNote>("availablenote"); }
+            get { return Database.GetCollection<Picture>("image"); }
         }
     }
 }

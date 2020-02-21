@@ -4,14 +4,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+<<<<<<< HEAD
 namespace JustNote.Serivces
+=======
+namespace JustNotes.Services
+>>>>>>> DatabaseData
 {
     public static class FilterService<T>
     {
         private static FilterDefinitionBuilder<T> builderByOneParam = new FilterDefinitionBuilder<T>();
         private static FilterDefinitionBuilder<T> builderByManyParam = new FilterDefinitionBuilder<T>();
         private static FilterDefinition<T> filter;
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> DatabaseData
         public static FilterDefinition<T> GetFilterByOneParam(string param, object value)
         {
             return builderByOneParam.Eq(param, value);

@@ -2,7 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+<<<<<<< HEAD
 using JustNote.Models;
+=======
+using JustNote.Attributes;
+using JustNote.Models;
+using JustNote.Serivces;
+>>>>>>> DatabaseData
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -38,16 +44,29 @@ namespace JustNote
                 builder =>
                 {
                     builder.WithOrigins("http://justnote-test.us-west-2.elasticbeanstalk.com/", 
-                        "https://cb5eza7o22.execute-api.us-west-2.amazonaws.com/Prod")
+                        "https://cb5eza7o22.execute-api.us-west-2.amazonaws.com/Prod",
+                        "http://localhost:3000",
+                        "https://loving-villani-6aa888.netlify.com")
                         .AllowAnyHeader()
                         .AllowAnyMethod();
                 });
             });
 
+<<<<<<< HEAD
             services.AddIdentity<User, IdentityRole>()
                 .AddDefaultTokenProviders();
 
             // Add S3 to the ASP.NET Core dependency injection framework.
+=======
+            services.AddSingleton<TokenManagerService>();
+            services.AddScoped<IDatabaseItemService<Note>, NoteService>();
+            services.AddScoped<IDatabaseItemService<Folder>, FolderService>();
+            services.AddScoped<IDatabaseItemService<SharedNote>, SharedNotesService>();
+            services.AddScoped<IDatabaseItemService<SharedFolder>, SharedFoldersService>();
+            services.AddScoped<IDatabaseItemService<Picture>, ImageService>();
+            services.AddScoped<IDatabaseItemService<User>, UzverService>();
+
+>>>>>>> DatabaseData
             services.AddAWSService<Amazon.S3.IAmazonS3>();
             services.AddSwaggerGen(c =>
             {

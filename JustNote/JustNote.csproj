@@ -6,15 +6,26 @@
     <DockerDefaultTargetOS>Windows</DockerDefaultTargetOS>
   </PropertyGroup>
   <ItemGroup>
+<<<<<<< HEAD
     <PackageReference Include="AWSSDK.MediaStoreData" Version="3.3.101.73" />
+=======
+    <PackageReference Include="Mailjet.Api" Version="1.2.2" />
+>>>>>>> DatabaseData
     <PackageReference Include="MailKit" Version="2.4.1" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="AWSSDK.S3" Version="3.3.106.4" />
     <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="3.3.100.1" />
+<<<<<<< HEAD
     <PackageReference Include="Amazon.Lambda.AspNetCoreServer" Version="4.0.0" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.9.5" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.0.0" />
     <PackageReference Include="MongoDB.Driver" Version="2.9.3" />
+=======
+    <PackageReference Include="Amazon.Lambda.AspNetCoreServer" Version="3.1.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.1.10" />
+    <PackageReference Include="MongoDB.Driver" Version="2.9.2" />
+    <PackageReference Include="RestSharp" Version="106.6.10" />
+>>>>>>> DatabaseData
     <PackageReference Include="Swashbuckle.AspNetCore" Version="4.0.1" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.6.0" />
   </ItemGroup>
